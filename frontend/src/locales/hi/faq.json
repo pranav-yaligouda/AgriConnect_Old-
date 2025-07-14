@@ -1,0 +1,46 @@
+{
+  "title": "अक्सर पूछे जाने वाले प्रश्न",
+  "intro": "यहाँ AgriConnect से संबंधित सामान्य प्रश्नों के उत्तर प्राप्त करें।",
+  "categories": {
+    "general": {
+      "title": "सामान्य",
+      "questions": {
+        "what-is-agriconnect": "AgriConnect क्या है?",
+        "what-is-agriconnect-answer": "AgriConnect एक ऐसा प्लेटफ़ॉर्म है जो किसानों और खरीदारों को सीधे, पारदर्शी और बिना कमीशन के कृषि व्यापार के लिए जोड़ता है।",
+        "how-do-i-register": "AgriConnect पर पंजीकरण कैसे करें?",
+        "how-do-i-register-answer": "रजिस्टर बटन पर क्लिक करें, अपनी जानकारी भरें और अपनी भूमिका (किसान, विक्रेता या ग्राहक) चुनें। फोन नंबर सत्यापित करें और पासवर्ड सेट करें।",
+        "how-do-i-request-contact": "मैं किसान या विक्रेता से संपर्क कैसे कर सकता/सकती हूँ?",
+        "how-do-i-request-contact-answer": "किसी उत्पाद पेज पर 'Contact Seller' पर क्लिक करें, आवश्यक मात्रा दर्ज करें और अनुरोध भेजें। किसान या विक्रेता आपके अनुरोध को स्वीकार या अस्वीकार करेगा।",
+        "how-does-negotiation-work": "मोलभाव और पुष्टि कैसे होती है?",
+        "how-does-negotiation-work-answer": "संपर्क अनुरोध स्वीकार होने के बाद, आप किसान या विक्रेता से सीधे बातचीत कर सकते हैं। दोनों पक्षों को अंतिम सहमति मात्रा और मूल्य ऐप में पुष्टि करनी होगी।",
+        "is-my-information-secure": "क्या मेरी जानकारी AgriConnect पर सुरक्षित है?",
+        "is-my-information-secure-answer": "हाँ, AgriConnect आपकी जानकारी को सुरक्षित रखने के लिए आधुनिक सुरक्षा और गोपनीयता उपायों का उपयोग करता है।",
+        "can-i-use-agriconnect-on-mobile": "क्या मैं मोबाइल पर AgriConnect का उपयोग कर सकता/सकती हूँ?",
+        "can-i-use-agriconnect-on-mobile-answer": "हाँ, AgriConnect मोबाइल और डेस्कटॉप दोनों पर पूरी तरह से काम करता है।"
+      }
+    },
+    "admin": {
+      "title": "एडमिन और विवाद",
+      "questions": {
+        "how-are-disputes-resolved": "विवाद कैसे सुलझाए जाते हैं?",
+        "how-are-disputes-resolved-answer": "यदि बातचीत के बाद असहमति होती है, तो दोनों पक्ष लेन-देन को 'disputed' के रूप में चिह्नित कर सकते हैं। एडमिन सभी जानकारी की समीक्षा कर निर्णय लेता है।",
+        "who-can-access-the-admin-panel": "एडमिन पैनल तक कौन पहुँच सकता है?",
+        "who-can-access-the-admin-panel-answer": "सिर्फ अधिकृत एडमिन उपयोगकर्ता ही सही डिवाइस और क्रेडेंशियल्स के साथ एडमिन डैशबोर्ड एक्सेस कर सकते हैं।"
+      }
+    },
+    "support": {
+      "title": "सहायता",
+      "questions": {
+        "how-can-i-contact-support": "मैं सहायता से कैसे संपर्क करूँ?",
+        "how-can-i-contact-support-answer": "आप Contact Us पेज या connect.agriconnect@gmail.com पर ईमेल के माध्यम से हमसे संपर्क कर सकते हैं।",
+        "what-are-your-support-hours": "सहायता सेवा के घंटे क्या हैं?",
+        "what-are-your-support-hours-answer": "हमारी सहायता टीम सोमवार से शनिवार, सुबह 9 बजे से शाम 7 बजे तक उपलब्ध है।"
+      }
+    }
+  },
+  "additional-support": {
+    "title": "अधिक सहायता चाहिए?",
+    "text": "यदि आपका प्रश्न यहाँ उत्तरित नहीं है, तो हमारी टीम आपकी सहायता के लिए उपलब्ध है।",
+    "button": "संपर्क सहायता"
+  }
+}

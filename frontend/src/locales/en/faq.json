@@ -1,0 +1,46 @@
+{
+  "title": "Frequently Asked Questions",
+  "intro": "Find answers to common questions about AgriConnect here.",
+  "categories": {
+    "general": {
+      "title": "General",
+      "questions": {
+        "what-is-agriconnect": "What is AgriConnect?",
+        "what-is-agriconnect-answer": "AgriConnect is a platform that directly connects farmers and buyers for transparent, commission-free agricultural trade.",
+        "how-do-i-register": "How do I register on AgriConnect?",
+        "how-do-i-register-answer": "Click the Register button, fill in your details, and choose your role as Farmer, Vendor, or Customer. Follow the steps to verify your phone number and set your password.",
+        "how-do-i-request-contact": "How do I request contact with a farmer or vendor?",
+        "how-do-i-request-contact-answer": "On a product page, click 'Contact Seller', enter your required quantity, and submit your request. The farmer or vendor will review and accept or reject your request.",
+        "how-does-negotiation-work": "How does negotiation and confirmation work?",
+        "how-does-negotiation-work-answer": "Once your contact request is accepted, you can negotiate directly with the farmer or vendor. Both parties must confirm the final agreed quantity and price in the app to complete the transaction.",
+        "is-my-information-secure": "Is my information secure on AgriConnect?",
+        "is-my-information-secure-answer": "Yes, AgriConnect uses modern security practices, encrypted connections, and privacy controls to protect your data.",
+        "can-i-use-agriconnect-on-mobile": "Can I use AgriConnect on my mobile device?",
+        "can-i-use-agriconnect-on-mobile-answer": "Yes, AgriConnect is designed to work seamlessly on both mobile and desktop devices."
+      }
+    },
+    "admin": {
+      "title": "Admin & Disputes",
+      "questions": {
+        "how-are-disputes-resolved": "How are disputes resolved?",
+        "how-are-disputes-resolved-answer": "If there is a disagreement after negotiation, both parties can mark the transaction as disputed. The admin will review the case and resolve it based on the provided information.",
+        "who-can-access-the-admin-panel": "Who can access the admin panel?",
+        "who-can-access-the-admin-panel-answer": "Only authorized admin users with the correct device and credentials can access the admin dashboard for security reasons."
+      }
+    },
+    "support": {
+      "title": "Support",
+      "questions": {
+        "how-can-i-contact-support": "How can I contact support?",
+        "how-can-i-contact-support-answer": "You can reach us through the Contact Us page or email connect.agriconnect@gmail.com.",
+        "what-are-your-support-hours": "What are your support hours?",
+        "what-are-your-support-hours-answer": "Our support team is available from 9 AM to 7 PM, Monday to Saturday."
+      }
+    }
+  },
+  "additional-support": {
+    "title": "Need More Help?",
+    "text": "If your question isn't answered here, our team is happy to assist you further.",
+    "button": "Contact Support"
+  }
+}

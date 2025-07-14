@@ -1,0 +1,355 @@
+{
+  "manageProducts": {
+    "product": "ಉತ್ಪನ್ನ",
+    "category": "ವರ್ಗ",
+    "price": "ಬೆಲೆ",
+    "stock": "ಸಂಚಯ",
+    "status": "ಸ್ಥಿತಿ",
+    "harvestDate": "ಕಟಾವು ದಿನಾಂಕ",
+    "minimumOrderQuantity": "ಕನಿಷ್ಠ ಆರ್ಡರ್ ಪ್ರಮಾಣ",
+    "actions": "ಕ್ರಿಯೆಗಳು",
+    "organic": "ಸಾವಯವ",
+    "active": "ಸಕ್ರಿಯ",
+    "inactive": "ನಿಷ್ಕ್ರಿಯ"
+  },
+  "home": {
+    "hero": { 
+      "title": "ಕೃಷಿಯನ್ನು ಶಕ್ತಿಗೊಳಿಸುವುದು, ಸಮುದಾಯಗಳನ್ನು ಸಂಪರ್ಕಿಸುವುದು",
+      "subtitle": "AgriConnect ಗೆ ಸ್ವಾಗತ: ರೈತರು ಮತ್ತು ಗ್ರಾಹಕರ ನಡುವಿನ ಅಂತರವನ್ನು ಕಡಿಮೆ ಮಾಡಿ, ಸ್ಥಿರ ಭವಿಷ್ಯಕ್ಕಾಗಿ.",
+      "exploreMarketplace": "ಮಾರ್ಕೆಟ್‌ಪ್ಲೇಸ್ ಅನ್ವೇಷಿಸಿ",
+      "register": "ನೋಂದಣಿ ಮಾಡಿ",
+      "goToDashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹೋಗಿ"
+    },
+    "features": {
+      "title":"ಏಕೆ AgriConnect ಆಯ್ಕೆಮಾಡಬೇಕು?"
+    },
+    "featuresBoxes": {
+      "freshProduce": {
+        "title": "ತಾಜಾ ಉತ್ಪನ್ನಗಳು",
+        "description": "ಸ್ಥಳೀಯ ರೈತರಿಂದ ನೇರವಾಗಿ ತಾಜಾ ಉತ್ಪನ್ನಗಳನ್ನು ಪಡೆಯಿರಿ."
+      },
+      "localSourcing": {
+        "title": "ಸ್ಥಳೀಯ ಸಂಪಾದನೆ",
+        "description": "ಸ್ಥಳೀಯ ಮತ್ತು ಸ್ಥಿರವಾಗಿ ಸಂಪಾದಿಸುವ ಮೂಲಕ ನಿಮ್ಮ ಸಮುದಾಯವನ್ನು ಬೆಂಬಲಿಸಿ."
+      },
+      "secureTransactions": {
+        "title": "ಭದ್ರ ವಹಿವಾಟುಗಳು",
+        "description": "ನಿಮ್ಮ ಪಾವತಿಗಳು ಮತ್ತು ಡೇಟಾ ಅಭಿವೃದ್ಧಿಗೊಂಡ ಭದ್ರತೆಯೊಂದಿಗೆ ರಕ್ಷಿಸಲಾಗಿದೆ."
+      },
+      "communitySupport": {
+        "title": "ಸಮುದಾಯ ಬೆಂಬಲ",
+        "description": "AgriConnect ಸಮುದಾಯದೊಂದಿಗೆ ಸಹಾಯ ಪಡೆಯಿರಿ ಮತ್ತು ಒಂದಾಗಿ ಬೆಳೆದುಹೋಗಿ."
+      },
+      "securePayments": {
+        "title": "ಭದ್ರ ಪಾವತಿಗಳು",
+        "description": "ನಿಮ್ಮ ಪಾವತಿಗಳು ಮತ್ತು ಡೇಟಾ ಅಭಿವೃದ್ಧಿಗೊಂಡ ಭದ್ರತೆಯೊಂದಿಗೆ ರಕ್ಷಿಸಲಾಗಿದೆ."
+      }
+    }
+    },
+    "cta": {
+      "title": "ಇಂದು AgriConnect ಗೆ ಸೇರ್ಪಡೆಗೊಳ್ಳಿ!",
+      "subtitle": "ಈಗಲೇ ಸೈನ್ ಅಪ್ ಮಾಡಿ ಮತ್ತು ಕೃಷಿ ಕ್ರಾಂತಿಯ ಭಾಗವಾಗಿರಿ.",
+      "signUp": "ಸೈನ್ ಅಪ್ ಮಾಡಿ",
+      "altTitle": "ಇಂದೇ AgriConnect ಸೇರಿ!",
+      "altSubtitle": "ಈಗಲೇ ಸೇರಿ ಮತ್ತು ಕೃಷಿ ಕ್ರಾಂತಿಯ ಭಾಗವಾಗಿರಿ.",
+      "altSignUp": "ಸೈನ್ ಅಪ್"
+    },
+  "nutrition": {
+    "calories": "ಕ್ಯಾಲೊರೀಸ್",
+    "protein": "ಪ್ರೋಟೀನ್",
+    "carbs": "ಕಾರ್ಬೋಹೈಡ್ರೇಟ್",
+    "fat": "ಕೊಬ್ಬು",
+    "fiber": "ಫೈಬರ್",
+    "vitamins": "ವಿಟಮಿನ್‌ಗಳು"
+  },
+  "features": {
+    "title": "ಏಕೆ AgriConnect ಆಯ್ಕೆಮಾಡಬೇಕು?",
+    "freshProduce": {
+      "title": "ತಾಜಾ ಉತ್ಪನ್ನಗಳು",
+      "description": "ಸ್ಥಳೀಯ ರೈತರಿಂದ ನೇರವಾಗಿ ತಾಜಾ ಉತ್ಪನ್ನಗಳನ್ನು ಪಡೆಯಿರಿ."
+    },
+    "localSourcing": {
+      "title": "ಸ್ಥಳೀಯ ಸಂಪಾದನೆ",
+      "description": "ಸ್ಥಳೀಯ ಮತ್ತು ಸ್ಥಿರವಾಗಿ ಸಂಪಾದಿಸುವ ಮೂಲಕ ನಿಮ್ಮ ಸಮುದಾಯವನ್ನು ಬೆಂಬಲಿಸಿ."
+    },
+    "isOrganic": "ಸಾವಯವ",
+    "soldBy": "ಮಾರಾಟ ಮಾಡಿದವರು",
+    "harvestDate": "ಕಟಾವು ದಿನಾಂಕ",
+    "productLocation": "ಉತ್ಪನ್ನ ಸ್ಥಳ",
+    "availableQuantity": "ಲಭ್ಯವಿರುವ ಪ್ರಮಾಣ",
+    "minimumOrderQuantity": "ಕನಿಷ್ಠ ಆರ್ಡರ್ ಪ್ರಮಾಣ",
+    "notSet": "ಸೆಟ್ ಮಾಡಿಲ್ಲ",
+    "contactSeller": "ಮಾರಾಟಗಾರರನ್ನು ಸಂಪರ್ಕಿಸಿ",
+    "productDetails": "ಉತ್ಪನ್ನ ವಿವರಗಳು",
+    "nutritionalInfo": "ಪೋಷಕಾಂಶ ಮಾಹಿತಿ",
+    "sellerInfo": "ಮಾರಾಟಗಾರರ ಮಾಹಿತಿ",
+    "aboutThisProduct": "ಈ ಉತ್ಪನ್ನದ ಬಗ್ಗೆ",
+    "keyFeatures": "ಮುಖ್ಯ ವೈಶಿಷ್ಟ್ಯಗಳು",
+    "freshlyHarvested": "ಹೆಚ್ಚು ಹಸಿರು ಕಟಾವು",
+    "organicallyGrown": "ಸಾವಯವವಾಗಿ ಬೆಳೆದ",
+    "directlySourced": "ನೇರವಾಗಿ ಪಡೆಯಲಾಗಿದೆ",
+    "nutritionalInformation": "ಪೋಷಕಾಂಶ ಮಾಹಿತಿ",
+    "certifiedFarmer": "ಪ್ರಮಾಣಿತ ರೈತ",
+    "farmerLocation": "ರೈತರ ಸ್ಥಳ"
+  },
+  "fastDelivery": {
+    "title": "ವೇಗವಾದ ವಿತರಣೆ",
+    "description": "ನಿಮ್ಮ ಆದ್ಯತೆಯ ಉತ್ಪನ್ನಗಳನ್ನು ವೇಗವಾಗಿ ಮತ್ತು ಸುರಕ್ಷಿತವಾಗಿ ಪಡೆಯಿರಿ."
+  },
+
+  "about": {
+    "hero": {
+      "title": "ಅಗ್ರಿಕನೆಕ್ಟ್ ಬಗ್ಗೆ",
+      "tagline": "ಕೃಷಿಯನ್ನು ಶಕ್ತಿಗೊಳಿಸುವುದು, ಸಮುದಾಯಗಳನ್ನು ಸಂಪರ್ಕಿಸುವುದು",
+      "chip1": "ನವೋದ್ಯಮ",
+      "chip2": "ಸಮುದಾಯ",
+      "chip4": "ಆಧುನಿಕ ತಂತ್ರಜ್ಞಾನ"
+    },
+    "mission": {
+      "title": "ನಮ್ಮ ಧ್ಯೇಯ",
+      "paragraph1": "ಅಗ್ರಿಕನೆಕ್ಟ್ ರೈತರಿಂದ ಗ್ರಾಹಕರಿಗೆ ಆಹಾರದ ಪ್ರಯಾಣವನ್ನು ಕ್ರಾಂತಿಕಾರಿಯಾಗಿಸಲು ಬದ್ಧವಾಗಿದೆ. ರೈತರನ್ನು ನೇರವಾಗಿ ಗ್ರಾಹಕರೊಂದಿಗೆ ಸಂಪರ್ಕಿಸುವ ಮೂಲಕ ನಾವು ಪಾರದರ್ಶಕತೆ, ನ್ಯಾಯವಾದ ವ್ಯಾಪಾರ ಮತ್ತು ಸದಾ ಉಳಿಯುವ ಅಭ್ಯಾಸಗಳನ್ನು ಖಚಿತಪಡಿಸುತ್ತೇವೆ.",
+      "paragraph2": "ನಾವು ಸ್ಥಳೀಯ ಕೃಷಿ, ಡಿಜಿಟಲ್ ಶಕ್ತೀಕರಣ ಮತ್ತು ಹಸಿರು ಗ್ರಹವನ್ನು ಪ್ರೋತ್ಸಾಹಿಸುತ್ತೇವೆ—ತಾಜಾ, ಉತ್ತಮ ಗುಣಮಟ್ಟದ ಉತ್ಪನ್ನಗಳನ್ನು ಎಲ್ಲರಿಗೂ ಲಭ್ಯವಾಗಿಸುವಂತೆ ಮಾಡುತ್ತೇವೆ ಮತ್ತು ಗ್ರಾಮೀಣ ಜೀವನೋಪಾಯ ಮತ್ತು ನವೋದ್ಯಮವನ್ನು ಬೆಂಬಲಿಸುತ್ತೇವೆ."
+    
+},
+    "highlights": {
+      "title": "ಏಕೆ AgriConnect ವಿಶಿಷ್ಟವಾಗಿದೆ",
+      "feature1": "ಪಾರದರ್ಶಕ, ಕಮಿಷನ್ ರಹಿತ ವಹಿವಾಟಿಗಾಗಿ ರೈತರು ಮತ್ತು ಖರೀದಿದಾರರನ್ನು ನೇರವಾಗಿ ಸಂಪರ್ಕಿಸುವುದು.",
+      "feature2": "ಕೃಷಿ ಉತ್ಪನ್ನಗಳು ಮತ್ತು ವಸ್ತುಗಳ ಸುಗಮ ಖರೀದಿ ಮತ್ತು ಮಾರಾಟಕ್ಕಾಗಿ ಮಾರುಕಟ್ಟೆ.",
+      "feature3": "ಭದ್ರ, ಆಧುನಿಕ ತಂತ್ರಜ್ಞಾನ (MERN) ಬಲವಾದ ದೃಢೀಕರಣ ಮತ್ತು ಗೌಪ್ಯತಾ ನಿಯಂತ್ರಣಗಳೊಂದಿಗೆ.",
+      "feature4": "ಪ್ರವೇಶಕ್ಕೆ ವಿನ್ಯಾಸಗೊಳಿಸಲಾಗಿದೆ, ಮೊಬೈಲ್-ಮೊದಲು ಮತ್ತು ಡೆಸ್ಕ್‌ಟಾಪ್-ಸಿದ್ಧ, ಸುಂದರ ಮತ್ತು ಸುಲಭ UI ಯೊಂದಿಗೆ.",
+      "tagline": "#GrowTogether"
+    },
+    "developer": {
+      "linkedin": {},
+      "github": {
+        "tooltip": "GitHub"
+      },
+      "twitter": {
+        "tooltip": "Twitter"
+      },
+      "bio": "ಕೃಷಿ, ಸ್ಥಿರತೆ ಮತ್ತು ಸಮುದಾಯಗಳಿಗಾಗಿ ಪರಿಣಾಮಕಾರಿ ಡಿಜಿಟಲ್ ಪರಿಹಾರಗಳನ್ನು ನಿರ್ಮಿಸುವಲ್ಲಿ ಆಸಕ್ತಿ. ಸ್ವಚ್ಛವಾದ ಕೋಡ್, ಆಧುನಿಕ ವಿನ್ಯಾಸ ಮತ್ತು ಬಳಕೆದಾರ-ಪ್ರಥಮ ಅನುಭವಗಳಿಗೆ ಸಮರ್ಪಿತ.",
+      "mission": "ನನ್ನ ಧ್ಯೇಯವು ರೈತರು, ಮಾರಾಟಗಾರರು ಮತ್ತು ಗ್ರಾಹಕರನ್ನು ಸುಲಭ, ವಿಶ್ವಾಸಾರ್ಹ ಮತ್ತು ಮಾಪನೀಯ ತಂತ್ರಜ್ಞಾನದಿಂದ ಶಕ್ತಿಗೊಳಿಸುವುದು. ಪರಂಪರಾಗತ ಕೃಷಿ ಮತ್ತು ಆಧುನಿಕ ಡಿಜಿಟಲ್ ಉಪಕರಣಗಳ ನಡುವಿನ ಅಂತರವನ್ನು ಕಡಿಮೆ ಮಾಡುವ ಮೂಲಕ ಎಲ್ಲಾ ಹಿತಾಸಕ್ತಿದಾರರಿಗೆ ಪಾರದರ್ಶಕತೆ, ಕಾರ್ಯಕ್ಷಮತೆ ಮತ್ತು ಬೆಳವಣಿಗೆಯನ್ನು ಉತ್ತೇಜಿಸುವುದರಲ್ಲಿ ನಾನು ನಂಬಿದ್ದೇನೆ.",
+      "collab": "ಈ ಯೋಜನೆ ಸಹಕಾರ, ಪ್ರತಿಕ್ರಿಯೆ ಮತ್ತು ಕೊಡುಗೆಗಳಿಗೆ ತೆರೆಯಲಾಗಿದೆ. ನಾವು ಒಟ್ಟಿಗೆ ಶಾಶ್ವತ ಭವಿಷ್ಯವನ್ನು ನಿರ್ಮಿಸೋಣ—ಪ್ರತಿ ಕೋಡ್ ಸಾಲಿನೊಂದಿಗೆ."
+    },
+    "values": {
+      "title": "ನಮ್ಮ ಮೌಲ್ಯಗಳು",
+      "sustainability": "ಸ್ಥಿರತೆ",
+      "sustainability.description": "ಪರಿಸರ ಸ್ನೇಹಿ ಕೃಷಿ ಪದ್ಧತಿಗಳನ್ನು ಉತ್ತೇಜಿಸುವುದು ಮತ್ತು ಆಹಾರದ ಮೈಲೇಜ್ ಅನ್ನು ಕಡಿಮೆ ಮಾಡುವುದು",
+      "transparentConnections": "ಪಾರದರ್ಶಕ ಸಂಪರ್ಕಗಳು",
+      "transparentConnections.description": "ರೈತರು ಮತ್ತು ಖರೀದಿದಾರರನ್ನು ನೇರವಾಗಿ ಸಂಪರ್ಕಿಸುವುದು, ಪಾರದರ್ಶಕ ಮತ್ತು ಕಮಿಷನ್ ರಹಿತ ವಹಿವಾಟಿಗಾಗಿ.",
+      "qualityAssurance": "ಗುಣಮಟ್ಟದ ಖಾತರಿ",
+      "qualityAssurance.description": "ಉತ್ತಮ ಉತ್ಪನ್ನಗಳನ್ನು ಖಚಿತಪಡಿಸಲು ಕಟ್ಟುನಿಟ್ಟಾದ ಗುಣಮಟ್ಟದ ಪರಿಶೀಲನೆಗಳು",
+      "farmerSupport": "ರೈತರಿಗೆ ಬೆಂಬಲ"
+    }
+  },
+  "register": {
+    "title": "ನೋಂದಣಿ ಮಾಡಿ",
+    "accountType": "ಖಾತೆ ಪ್ರಕಾರ",
+    "username": "ಬಳಕೆದಾರ ಹೆಸರು",
+    "usernameLoading": "ಬಳಕೆದಾರ ಹೆಸರು ರಚಿಸಲಾಗುತ್ತಿದೆ...",
+    "usernameHelper": "ವೈಶಿಷ್ಟ್ಯಪೂರ್ಣ ಬಳಕೆದಾರ ಹೆಸರನ್ನು ಆಯ್ಕೆಮಾಡಿ. ನೀವು ಇದನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ರಚಿಸಬಹುದು.",
+    "suggestUsername": "ಬಳಕೆದಾರ ಹೆಸರನ್ನು ಸೂಚಿಸಿ",
+    "name": "ಹೆಸರು",
+    "email": "ಇಮೇಲ್",
+    "phone": "ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
+    "password": "ಪಾಸ್ವರ್ಡ್",
+    "passwordHelper": "ಪಾಸ್ವರ್ಡ್ ಕನಿಷ್ಠ 7 ಅಕ್ಷರಗಳಿರಬೇಕು ಮತ್ತು ಅಕ್ಷರಗಳು, ಸಂಖ್ಯೆಗಳು, ಮತ್ತು ಚಿಹ್ನೆಗಳನ್ನು ಹೊಂದಿರಬಹುದು.",
+    "confirmPassword": "ಪಾಸ್ವರ್ಡ್ ದೃಢೀಕರಿಸಿ",
+    "street": "ರಸ್ತೆ ವಿಳಾಸ",
+    "district": "ಜಿಲ್ಲೆ",
+    "state": "ರಾಜ್ಯ",
+    "zipcode": "ಪಿನ್ ಕೋಡ್",
+    "readyToCreateAccount": "ನಿಮ್ಮ ಖಾತೆ ರಚಿಸಲು ಸಿದ್ಧರಾಗಿದ್ದೀರಾ?",
+    "clickRegisterToCompleteRegistration": "ನೋಂದಣಿ ಕ್ಲಿಕ್ ಮಾಡಿ ಮತ್ತು ನಿಮ್ಮ ನೋಂದಣಿಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.",
+    "validation": {
+      "roleRequired": "ಪಾತ್ರ ಅಗತ್ಯವಿದೆ.",
+      "usernamePattern": "ಬಳಕೆದಾರ ಹೆಸರಿನಲ್ಲಿ ಅಕ್ಷರಗಳು, ಸಂಖ್ಯೆಗಳು ಮತ್ತು ಅಂಡರ್‌ಸ್ಕೋರ್ ಮಾತ್ರ ಇರಬಹುದು.",
+      "usernameRequired": "ಬಳಕೆದಾರ ಹೆಸರು ಅಗತ್ಯವಿದೆ.",
+      "nameRequired": "ಹೆಸರು ಅಗತ್ಯವಿದೆ.",
+      "invalidEmail": "ಅಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ.",
+      "emailRequired": "ಇಮೇಲ್ ಅಗತ್ಯವಿದೆ.",
+      "phoneInvalid": "ಅಮಾನ್ಯ ದೂರವಾಣಿ ಸಂಖ್ಯೆ.",
+      "phoneRequired": "ದೂರವಾಣಿ ಸಂಖ್ಯೆ ಅಗತ್ಯವಿದೆ.",
+      "passwordPattern": "ಪಾಸ್ವರ್ಡ್ ಕನಿಷ್ಠ 7 ಅಕ್ಷರಗಳಿರಬೇಕು.",
+      "passwordRequired": "ಪಾಸ್ವರ್ಡ್ ಅಗತ್ಯವಿದೆ.",
+      "passwordsMustMatch": "ಪಾಸ್ವರ್ಡ್‌ಗಳು ಹೊಂದಿಕೊಳ್ಳಬೇಕು.",
+      "confirmPasswordRequired": "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅನ್ನು ದೃಢೀಕರಿಸಿ.",
+      "districtRequired": "ಜಿಲ್ಲೆ ಅಗತ್ಯವಿದೆ.",
+      "stateRequired": "ರಾಜ್ಯ ಅಗತ್ಯವಿದೆ."
+    
+}
+},
+  "login": {
+    "title": "ಲಾಗಿನ್ ಮಾಡಿ",
+    "email": "ಇಮೇಲ್",
+    "password": "ಪಾಸ್ವರ್ಡ್",
+    "signIn": "ಲಾಗಿನ್ ಮಾಡಿ",
+    "noAccount": "ಖಾತೆ ಇಲ್ಲವೇ? ಈಗಲೇ ನೋಂದಣಿ ಮಾಡಿ!",
+    "loading": "ಲಾಗಿನ್ ಆಗುತ್ತಿದೆ...",
+    "validation": {
+      "invalidEmail": "ಅಮಾನ್ಯ ಇಮೇಲ್ ವಿಳಾಸ.",
+      "emailRequired": "ಇಮೇಲ್ ಅಗತ್ಯವಿದೆ.",
+      "passwordRequired": "ಪಾಸ್ವರ್ಡ್ ಅಗತ್ಯವಿದೆ."
+    }
+  },
+  "dashboard": {
+    "welcome": "ಸ್ವಾಗತ",
+    "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+    "addNewProduct": "ಹೊಸ ಉತ್ಪನ್ನವನ್ನು ಸೇರಿಸಿ",
+    "manageProducts": "ಉತ್ಪನ್ನಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
+    "totalInventoryValue": "ಒಟ್ಟು ಇನ್‌ವೆಂಟರಿ ಮೌಲ್ಯ",
+    "recentlyAddedProducts": "ಇತ್ತೀಚೆಗೆ ಸೇರಿಸಿದ ಉತ್ಪನ್ನಗಳು",
+    "product": "ಉತ್ಪನ್ನ",
+    "category": "ವರ್ಗ",
+    "vegetables": "ತರಕಾರಿ",
+    "fruits": "ಹಣ್ಣುಗಳು",
+    "grains": "ಧಾನ್ಯಗಳು",
+    "dairy": "ಹಾಲು ಉತ್ಪನ್ನಗಳು",
+    "meat": "ಮಾಂಸ",
+    "poultry": "ಕೋಳಿ",
+    "other": "ಇತರೆ",
+    "price": "ಬೆಲೆ",
+    "stock": "ಸಂಗ್ರಹ",
+    "harvestDate": "ಕಟಾವು ದಿನಾಂಕ",
+    "organic": "ಸಾವಯವ",
+    "quickActions": "ತ್ವರಿತ ಕ್ರಿಯೆಗಳು",
+    "browseProducts":"ಉತ್ಪನ್ನಗಳನ್ನು ಪ್ರಬಳಿಸಿ",
+    "viewProfile":"ಬಿಷ್ಣಿ ಪ್ರಾಧಾನ್ಯ",
+    "bulkOrders":"ಬಂಧ ಆರ್ಡರ್",
+    "recentBulkOrders":"ಇತ್ತೀಚೆಗೆ ಬಂಧ ಆರ್ಡರ್",
+    "farmer":"ರೈತರ",
+    "availableProducts":"ಉತ್ಪನ್ನಗಳನ್ನು ಪ್ರಬಳಿಸಿ",
+    "viewDetails":"ಬಿಷ್ಣಿ ಪ್ರಾಧಾನ್ಯ",
+    "available": "ಉತ್ಪನ್ನ",
+    "bulkOrder":"ಬಂಧ ಆರ್ಡರ್",
+    "orderHistory": "ಆರ್ಡರ್ ಇತಿಹಾಸ",
+    "unit": "ಘಟಕ",
+    "kilogram": "ಕಿಲೋಗ್ರಾಂ",
+    "gram": "ಗ್ರಾಂ",
+    "pound": "ಪೌಂಡ್",
+    "piece": "ತುಕಡಿ",
+    "dozen": "ಡಜನ್",
+    "organicProduct": "ಸಾವಯವ ಉತ್ಪನ್ನ",
+    "productImages": "ಉತ್ಪನ್ನ ಚಿತ್ರಗಳು",
+    "cancel": "ರದ್ದುಮಾಡು",
+    "addProduct": "ಉತ್ಪನ್ನವನ್ನು ಸೇರಿಸಿ",
+    "orderId": "ಆರ್ಡರ್ ಐಡಿ",
+    "date": "ದಿನಾಂಕ",
+    "items": "ಐಟಂಗಳು",
+    "amount": "ಮೊತ್ತ",
+    "status": "ಸ್ಥಿತಿ",
+    "actions": "ಕ್ರಿಯೆಗಳು",
+    "productAddedSuccess": "ಉತ್ಪನ್ನವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸೇರಿಸಲಾಗಿದೆ",
+    "productAddFail": "ಉತ್ಪನ್ನವನ್ನು ಸೇರಿಸಲು ವಿಫಲವಾಗಿದೆ",
+    "imagesUploadedSuccess": "ಚಿತ್ರಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅಪ್‌ಲೋಡ್ ಮಾಡಲಾಗಿದೆ",
+    "imagesUploadFail": "ಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+    "missingFields": "ಕಾಣೆಯಾದ: {{fields}}",
+    "productName": "ಉತ್ಪನ್ನದ ಹೆಸರು",
+    "description": "ವಿವರಣೆ"
+  },
+  "profile":{
+    "title": "ಪ್ರೊಫೈಲ್",
+    "name": "ಹೆಸರು",
+    "farmer":"ರೈತ",
+    "customer":"ಗ್ರಾಹಕ",
+    "vendor":"ಮಾರಾಟಗಾರ",
+    "memberSince":"ಸದಸ್ಯರಾಗಿದ್ದರಿಂದ",
+    "editProfile": "ಪ್ರೊಫೈಲ್ ಸಂಪಾದಿಸಿ",
+    "deleteAccountConfirm":"ಖಾತೆಯನ್ನು ಅಳಿಸುವುದಾಗಿ ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ? ಈ ಕ್ರಿಯೆಯನ್ನು ಹಿಂತಿರುಗಿಸಲಾಗದು.",
+    "confirmProductDeletion": "ಉತ್ಪನ್ನವನ್ನು ಅಳಿಸಿ",
+    "confirmProductDeletionText": "ಈ ಉತ್ಪನ್ನವನ್ನು ನಿಜವಾಗಿಯೂ ಅಳಿಸಲು ಬಯಸುವಿರಾ? ಈ ಕ್ರಿಯೆಯನ್ನು ಹಿಂತಿರುಗಿಸಲಾಗದು.",
+    "confirmDelete": "ಅಳಿಸಿ",
+    "email": "ಇಮೇಲ್",
+    "phone": "ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
+    "district":"ಜಿಲ್ಲೆ",
+    "state":"ರಾಜ್ಯ",
+    "zipCode":"ಪಿನ್ ಕೋಡ್",
+    "address": "ವಿಳಾಸ",
+    "orders":"ಆರ್ಡರ್ ಗಳು",
+    "noRecentOrders":"ಇತ್ತೀಚಿನ ಆರ್ಡರ್ ಗಳು ಇಲ್ಲ",
+    "history":"ಇತಿಹಾಸ",
+    "purchaseHistory":"ಖರೀದಿ ಇತಿಹಾಸ",
+    "yourRecentPurchasesWillAppearHere":"ನಿಮ್ಮ ಇತ್ತೀಚಿನ ಖರೀದಿಗಳು ಇಲ್ಲಿ ಕಾಣಿಸಿಕೊಳ್ಳುತ್ತವೆ",
+    "products": "ಉತ್ಪನ್ನಗಳು",
+    "viewDetails": "ವಿವರಗಳು",
+    "posts": "ಪೋಸ್ಟ್ ಗಳು",
+    "noPostsUploaded": "ಯಾವುದೇ ಪೋಸ್ಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಲಾಗಿಲ್ಲ",
+    "password": "ಪಾಸ್ವರ್ಡ್",
+    "update": "ನವೀಕರಿಸಿ",
+    "changePassword": "ಪಾಸ್ವರ್ಡ್ ಬದಲಾಯಿಸಿ",
+    "oldPassword": "ಹಳೆಯ ಪಾಸ್ವರ್ಡ್",
+    "newPassword": "ಹೊಸ ಪಾಸ್ವರ್ಡ್",
+    "confirmPassword": "ಪಾಸ್ವರ್ಡ್ ದೃಢೀಕರಿಸಿ",
+    "save": "ಉಳಿಸಿ",
+    "saveChanges": "ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸಿ",
+    "cancel": "ರದ್ದುಮಾಡು",
+    "delete": "ಅಳಿಸಿ",
+    "deleteAccount": "ಖಾತೆ ಅಳಿಸಿ",
+    "deleteAccountMessage": "ನೀವು ಖಾತೆಯನ್ನು ಅಳಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ?",
+    "deleteAccountDescription": "ಈ ಕ್ರಿಯೆಯನ್ನು ಹಿಂತಿರುಗಿಸಲಾಗದು.",
+    "productsTab": "ಉತ್ಪನ್ನಗಳು",
+    "contactRequestsTab": "ಸಂಪರ್ಕ ವಿನಂತಿಗಳು",
+    "addressNotProvided": "ವಿಳಾಸ ಲಭ್ಯವಿಲ್ಲ",
+    "productDeleted": "ಉತ್ಪನ್ನವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ!",
+    "profileUpdated": "ಪ್ರೊಫೈಲ್ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ!",
+    "failedToUpdateProfile": "ಪ್ರೊಫೈಲ್ ನವೀಕರಿಸಲು ವಿಫಲವಾಗಿದೆ.",
+    "failedToFetchProducts": "ಉತ್ಪನ್ನಗಳನ್ನು ತರಲು ವಿಫಲವಾಗಿದೆ.",
+  "sentRequests": "ಕಳುಹಿಸಿದ ವಿನಂತಿಗಳು",
+  "noSentRequests": "ಯಾವುದೇ ಕಳುಹಿಸಿದ ವಿನಂತಿಗಳು ಇಲ್ಲ.",
+  "receivedRequests": "ಸ್ವೀಕರಿಸಿದ ವಿನಂತಿಗಳು",
+  "from": "ಯಿಂದ",
+  "product": "ಉತ್ಪನ್ನ",
+  "status": "ಸ್ಥಿತಿ",
+  "requestedAt": "ವಿನಂತಿಯ ದಿನಾಂಕ",
+  "requestedQuantity": "ವಿನಂತಿಸಿದ ಪ್ರಮಾಣ",
+  "finalQuantity": "ಅಂತಿಮ ಪ್ರಮಾಣ",
+  "finalPrice": "ಅಂತಿಮ ಬೆಲೆ",
+  "farmerContactInfo": "ರೈತ ಸಂಪರ್ಕ ಮಾಹಿತಿ",
+  "userFeedback": "ಬಳಕೆದಾರ ಪ್ರತಿಕ್ರಿಯೆ",
+  "farmerFeedback": "ರೈತ ಪ್ರತಿಕ್ರಿಯೆ",
+  "adminNote": "ನಿರ್ವಾಹಕ ಟಿಪ್ಪಣಿ",
+  "accept": "ಸ್ವೀಕರಿಸಿ",
+  "reject": "ನಿರಾಕರಿಸಿ",
+  "completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+  "disputed": "ವಿವಾದಿತ",
+  "didYouBuy": "ನೀವು ಈ ಉತ್ಪನ್ನವನ್ನು ಖರೀದಿಸಿದ್ದೀರಾ?",
+  "confirmSale": "ಮಾರಾಟವನ್ನು ದೃಢೀಕರಿಸಿ",
+  "statuses": {
+    "pending": "ಬಾಕಿ ಇದೆ",
+    "accepted": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+    "completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+    "disputed": "ವಿವಾದಿತ",
+    "not_completed": "ಪೂರ್ಣಗೊಂಡಿಲ್ಲ",
+    "expired": "ಅವಧಿ ಮುಗಿದಿದೆ"
+  }
+},
+  "productDetails": {
+    "isOrganic": "ಸಾವಯವ",
+    "soldBy": "ಮಾರಾಟ ಮಾಡಿದವರು",
+    "harvestDate": "ಕಟಾವು ದಿನಾಂಕ",
+    "productLocation": "ಉತ್ಪನ್ನ ಸ್ಥಳ",
+    "availableQuantity": "ಲಭ್ಯವಿರುವ ಪ್ರಮಾಣ",
+    "minimumOrderQuantity": "ಕನಿಷ್ಠ ಆರ್ಡರ್ ಪ್ರಮಾಣ",
+    "notSet": "ಸೆಟ್ ಮಾಡಿಲ್ಲ",
+    "contactSeller": "ಮಾರಾಟಗಾರರನ್ನು ಸಂಪರ್ಕಿಸಿ",
+    "productDetails": "ಉತ್ಪನ್ನ ವಿವರಗಳು",
+    "nutritionalInfo": "ಪೋಷಕಾಂಶ ಮಾಹಿತಿ",
+    "sellerInfo": "ಮಾರಾಟಗಾರರ ಮಾಹಿತಿ",
+    "aboutThisProduct": "ಈ ಉತ್ಪನ್ನದ ಬಗ್ಗೆ",
+    "keyFeatures": "ಮುಖ್ಯ ವೈಶಿಷ್ಟ್ಯಗಳು",
+    "freshlyHarvested": "ಹೆಚ್ಚು ಹಸಿರು ಕಟಾವು",
+    "organicallyGrown": "ಸಾವಯವವಾಗಿ ಬೆಳೆದ",
+    "directlySourced": "ನೇರವಾಗಿ ಪಡೆಯಲಾಗಿದೆ",
+    "nutritionalInformation": "ಪೋಷಕಾಂಶ ಮಾಹಿತಿ",
+    "certifiedFarmer": "ಪ್ರಮಾಣಿತ ರೈತ",
+    "farmerLocation": "ರೈತರ ಸ್ಥಳ",
+    "nutrition": {
+      "calories": "ಕ್ಯಾಲೊರೀಸ್",
+      "protein": "ಪ್ರೋಟೀನ್",
+      "carbs": "ಕಾರ್ಬೋಹೈಡ್ರೇಟ್",
+      "fat": "ಕೊಬ್ಬು",
+      "fiber": "ಫೈಬರ್",
+      "vitamins": "ವಿಟಮಿನ್‌ಗಳು"
+    }
+  }
+}

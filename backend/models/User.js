@@ -1,0 +1,141 @@
+// User.js
+// User model for AgriConnect: includes unique username, email, password, role, profile, connections, and requests
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const ADMIN_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1';
+
+// Add indexes for frequently queried fields
+function defineIndexes() {
+  userSchema.index({ role: 1 });
+}
+
+/**
+ * User schema definition
+ * @type {mongoose.Schema}
+ */
+const userSchema = new mongoose.Schema({
+  // User's display name (not unique)
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  // Unique username for login and identification
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores.']
+  },
+  // Unique email for account (used for login/verification)
+  email: {
+    type: String,
+    required: false,
+    trim: true,
+    lowercase: true
+  },
+  // Hashed password for security
+  password: {
+    type: String,
+    required: true,
+    minlength: 6
+  },
+  // User's role in the system
+  role: {
+    type: String,
+    enum: ['user', 'farmer', 'vendor', 'admin'],
+    default: 'user'
+  },
+  // Contact phone number
+  phone: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    validate: {
+      validator: function (v) {
+        return /^\+?\d{10,15}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid phone number!`
+    }
+  },
+  // Structured address
+  address: {
+    street: { type: String },
+    district: { type: String, required: [true, 'District is required'] },
+    state: { type: String, required: [true, 'State is required'] },
+    zipcode: { 
+      type: String,
+      validate: {
+        validator: function (v) {
+          return /^\d{6}$/.test(v);
+        },
+        message: props => `${props.value} is not a valid zip code!`
+      }
+    }
+  },
+  // Single profile image (base64 string and content type)
+  profileImage: {
+    data: { type: String, default: null },
+    contentType: { type: String, default: null }
+  },
+  // Email verification status
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  tokenVersion: {
+    type: Number,
+    default: 0,
+    index: true
+  },
+  // Account creation timestamp
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  deviceFingerprint: { type: String, default: null },
+});
+
+// Add index for role only (email is already unique via schema)
+defineIndexes();
+
+/**
+ * Pre-save hook: hash password before saving user document
+ */
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Method to compare input password with hashed password
+ * @param {string} candidatePassword
+ * @returns {Promise<boolean>}
+ */
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Cascading delete: remove user's products and orders
+userSchema.pre('remove', async function(next) {
+  const userId = this._id;
+  await Promise.all([
+    require('./Product').deleteMany({ farmer: userId }),
+    require('./Order').deleteMany({ $or: [{ buyer: userId }, { farmer: userId }] })
+  ]);
+  next();
+});
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;

@@ -1,0 +1,402 @@
+{
+  "languageSwitcher": {
+    "english": "English",
+    "language": "Language"
+  },
+  "about": {
+    "hero": {
+      "title": "About AgriConnect",
+      "tagline": "Empowering Agriculture, Connecting Communities",
+      "chip1": "Innovation",
+      "chip2": "Community",
+      "chip4": "Modern Tech"
+    },
+    "mission": {
+      "title": "Our Mission",
+      "paragraph1": "AgriConnect is on a mission to revolutionize the farm-to-table journey. By directly connecting farmers with consumers, we ensure transparency, fair trade, and sustainable practices that benefit everyone in the food supply chain.",
+      "paragraph2": "We champion local agriculture, digital empowerment, and a greener planet—making fresh, high-quality produce accessible to all while supporting rural livelihoods and innovation."
+    },
+    "highlights": {
+      "title": "Why AgriConnect Stands Out",
+      "feature1": "Direct farmer-to-buyer connections for transparent, commission-free negotiations.",
+      "feature2": "Marketplace for seamless buying and selling of farm produce and goods.",
+      "feature3": "Secure, modern technology stack (MERN) with robust authentication and privacy controls.",
+      "feature4": "Designed for accessibility, mobile-first and desktop-ready, with a beautiful and intuitive UI.",
+      "tagline": "#GrowTogether"
+    },
+    "developer": {
+      "linkedin": {},
+      "github": {
+        "tooltip": "GitHub"
+      },
+      "twitter": {
+        "tooltip": "Twitter"
+      },
+      "bio": "Passionate about building impactful digital solutions for agriculture, sustainability, and communities. Dedicated to clean code, modern design, and user-first experiences.",
+      "mission": "My mission is to empower farmers, vendors, and consumers through intuitive, reliable, and scalable technology. I believe in bridging the gap between traditional agriculture and modern digital tools to foster transparency, efficiency, and growth for all stakeholders.",
+      "collab": "This project is open for collaboration, feedback, and contributions. Let's build a sustainable future together—one line of code at a time."
+    },
+    "values": {
+      "title": "Our Values",
+      "sustainability": "Sustainability",
+      "sustainability.description": "Promoting eco-friendly farming practices and reducing food miles",
+      "transparentConnections": "Transparent Connections",
+      "transparentConnections.description": "Connecting farmers and buyers directly for transparent, commission-free negotiations.",
+      "qualityAssurance": "Quality Assurance",
+      "qualityAssurance.description": "Rigorous quality checks to ensure the best products",
+      "farmerSupport": "Farmer Support",
+      "farmerSupport.description": "Empowering farmers with fair prices and market access",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbohydrates",
+      "fat": "Fat",
+      "fiber": "Fiber",
+      "vitamins": "Vitamins"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Empowering Agriculture, Connecting Communities",
+      "subtitle": "Welcome to AgriConnect: Bridging the gap between farmers and consumers for a sustainable future.",
+      "exploreMarketplace": "Explore Marketplace",
+      "register": "Register Now",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "features": {
+      "title": "Why Choose AgriConnect?",
+      "freshProduce": {
+        "title": "Fresh Produce",
+        "description": "Get the freshest produce directly from local farmers."
+      
+},
+      "localSourcing": {
+        "title": "Local Sourcing",
+        "description": "Support your community by sourcing locally and sustainably."
+      
+},
+      "secureTransactions": {
+        "title": "Secure Transactions",
+        "description": "Your payments and data are protected with advanced security."
+      
+},
+      "communitySupport": {
+        "title": "Community Support",
+        "description": "Get help and grow together with the AgriConnect community."
+      
+},
+      "securePayments": {
+},
+      "connections": {
+        "title": "Connections",
+        "description": "Build and manage your network with farmers, buyers, and agri-enthusiasts."
+      
+},
+      "fastDelivery": {
+      }
+    },
+    "featuresBoxes": {
+      "freshProduce": {
+        "title": "Fresh Produce",
+        "description": "Get the freshest produce directly from local farmers."
+      },
+      "localSourcing": {
+        "title": "Local Sourcing",
+        "description": "Support your community by sourcing locally and sustainably."
+      },
+      "secureTransactions": {
+        "title": "Secure Transactions",
+        "description": "Your payments and data are protected with advanced security."
+      },
+      "communitySupport": {
+        "title": "Community Support",
+        "description": "Get help and grow together with the AgriConnect community."
+      }
+    },
+    "cta": {
+      "title": "Join AgriConnect Today!",
+      "subtitle": "Sign up now and be a part of the agricultural revolution.",
+      "signUp": "Sign Up"
+    }
+  },
+  "register": {
+    "title": "Register",
+    "accountType": "Account Type",
+    "username": "Username",
+    "name": "Name",
+    "usernameLoading": "Generating username...",
+    "usernameHelper": "Choose a unique username. You can generate one automatically.",
+    "suggestUsername": "Suggest Username",
+    "usernameRequired": "Username is required.",
+    "nextButton": "Next",
+    "back": "Back",
+    "registerButton": "Register",
+    "alreadyHaveAnAccount": "Already have an account?",
+    "loginHere": "Login Here",
+    "email": "Email",
+    "phone": "Phone Number",
+    "password": "Password",
+    "passwordHelper": "Password must be at least 7 characters and can include letters, numbers, and symbols.",
+    "confirmPassword": "Confirm Password",
+    "street": "Street Address",
+    "district": "District",
+    "state": "State",
+    "zipcode": "Zip Code",
+    "readyToCreateAccount": "Ready to create your account?",
+    "clickRegisterToCompleteRegistration": "Click Register to complete your registration.",
+    "validation": {
+      "roleRequired": "Role is required.",
+      "usernamePattern": "Username can only contain letters, numbers, and underscores.",
+      "usernameRequired": "Username is required.",
+      "nameRequired": "Name is required.",
+      "invalidEmail": "Invalid email address.",
+      "emailRequired": "Email is required.",
+      "phoneInvalid": "Invalid phone number.",
+      "phoneRequired": "Phone number is required.",
+      "passwordPattern": "Password must be at least 7 characters.",
+      "passwordRequired": "Password is required.",
+      "passwordsMustMatch": "Passwords must match.",
+      "confirmPasswordRequired": "Please confirm your password.",
+      "districtRequired": "District is required.",
+      "stateRequired": "State is required."
+    
+},
+    "success": "Registration successful!",
+    "error": "Registration failed. Please try again."
+  
+},
+  "login": {
+    "title": "Login",
+    "phone": "Phone Number",
+    "invalidPhone": "Invalid phone number.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "submit": "Submit",
+    "forgotPassword": "Forgot Password?",
+    "signUp": "Sign Up",
+    "noAccount": "Don't have an account? Register now!",
+    "loading": "Logging in...",
+    "validation": {
+      "invalidEmail": "Invalid email address.",
+      "emailRequired": "Email is required.",
+      "passwordRequired": "Password is required."
+    
+},
+    "success": "Login successful!",
+    "error": "Login failed. Please check your credentials and try again."
+  
+},
+  "productDetails": {
+    "isOrganic": "Organic",
+    "soldBy": "Sold By",
+    "harvestDate": "Harvest Date",
+    "productLocation": "Product Location",
+
+
+    "availableQuantity": "Available Quantity",
+    "minimumOrderQuantity": "Minimum Order Quantity",
+    "notSet": "Not set",
+
+
+    "contactSeller": "Contact Seller",
+    "productDetails": "Product Details",
+    "nutritionalInfo": "Nutritional Information",
+    "sellerInfo": "Seller Information",
+    "aboutThisProduct": "About This Product",
+    "keyFeatures": "Key Features",
+    "freshlyHarvested": "Freshly Harvested",
+    "organicallyGrown": "Organically Grown",
+    "directlySourced": "Directly Sourced",
+    "nutritionalInformation": "Nutritional Information",
+    "certifiedFarmer": "Certified Farmer",
+    "farmerLocation": "Farmer Location",
+    "nutrition": {
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbohydrates",
+      "fat": "Fat",
+      "fiber": "Fiber",
+      "vitamins": "Vitamins"
+    }
+  },
+  "dashboard": {
+    "welcome":"Welcome",
+    "dashboard":"Dashboard",
+    "addNewProduct":"Add New Product",
+    "manageProducts":"Manage Products",
+    "totalInventoryValue":"Total Inventory Value",
+    "recentlyAddedProducts":"Recently Added Products",
+    "product":"Product",
+    "category":"Category",
+    "vegetables":"Vegetables",
+    "fruits":"Fruits",
+    "grains":"Grains",
+    "dairy":"Dairy",
+    "meat":"Meat",
+    "poultry":"Poultry",
+    "other":"Other",
+    "price":"Price",
+    "stock":"Stock",
+    "harvestDate":"Harvest Date",
+    "organic":"Organic",
+    "quickActions": "Quick Actions",
+    "browseProducts":"Browse Products",
+    "bulkOrders":"Bulk Orders",
+    "recentBulkOrders":"Recent Bulk Orders",
+    "farmer":"Farmer",
+    "availableProducts":"Available Products",
+    "viewDetails":"View Details",
+    "available":"Available Quantity",
+    "bulkOrder":"Bulk Order",
+    "viewProfile":"View Profile",
+    "orderHistory": "Order History",
+    "unit":"Unit",
+    "kilogram":"Kilogram",
+    "gram":"Gram",
+    "pound":"Pound",
+    "piece":"Piece",
+    "dozen":"Dozen",
+    "bunch":"Bunch",
+    "availableQuantity":"Available Quantity",
+    "district":"District",
+    "state":"State",
+    "zipcode":"Zip Code",
+    "organicProduct":"Organic Product",
+    "productImages":"Product Images",
+    "cancel":"Cancel",
+    "addProduct":"Add Product",
+    "orderId": "Order ID",
+    "date": "Date",
+    "items": "Items",
+    "amount": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "productAddedSuccess": "Product added successfully",
+    "productAddFail": "Failed to add product",
+    "imagesUploadedSuccess": "Images uploaded successfully",
+    "imagesUploadFail": "Failed to upload images",
+    "missingFields": "Missing: {{fields}}",
+    "productName": "Product Name",
+    "images": "Images",
+    "description": "Description"
+  },
+  "manageProducts": {
+    "manageProducts": "Manage Products",
+    "product": "Product",
+    "notSet":"Not Set",
+    "editProduct": "Edit Product",
+    "productName": "Product Name",
+    "addProduct": "Add Product",
+    "organicProduct": "Organic Product",
+    "district": "District",
+    "state": "State",
+    "productImages":"Product Images",
+    "category": "Category",
+    "vegetables": "Vegetables",
+    "fruits": "Fruits",
+    "grains": "Grains",
+    "dairy": "Dairy",
+    "meat": "Meat",
+    "poultry": "Poultry",
+    "other": "Other",
+    "unit":"Unit",
+    "kg":"Kilogram",
+    "g":"Gram",
+    "lb":"Pound",
+    "minimumOrderQuantityHelper":"Minimum Order Quantity",
+    "availableQuantity":"Available Quantity",
+    "description":"Description",
+    "cancel":"Cancel",
+    "saveChanges":"Save Changes",
+    "confirmDelete":"Confirm Delete",
+    "confirmDeleteMessage":"Are you sure you want to delete this product? This action cannot be undone.",
+    "piece":"Piece",
+    "dozen":"Dozen",
+    "bunch":"Bunch",
+    "price": "Price",
+    "stock": "Stock",
+    "status": "Status",
+    "harvestDate": "Harvest Date",
+    "minimumOrderQuantity": "Minimum Order Quantity",
+    "actions": "Actions",
+    "organic": "Organic",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "profile": {
+    "title": "Profile",
+    "name": "Name",
+    "farmer": "Farmer",
+    "customer": "Customer",
+    "vendor": "Vendor",
+    "memberSince": "Member Since",
+    "editProfile": "Edit Profile",
+    "deleteAccountConfirm": "Confirm account deletion? This action cannot be undone.",
+    "confirmProductDeletion": "Delete Product",
+    "confirmProductDeletionText": "Are you sure you want to delete this product? This action cannot be undone.",
+    "confirmDelete": "Delete",
+    "email": "Email",
+    "phone": "Phone Number",
+    "district": "District",
+    "state": "State",
+    "zipCode": "PIN Code",
+    "address": "Address",
+    "orders": "Orders",
+    "noRecentOrders": "No recent orders",
+    "history": "History",
+    "purchaseHistory": "Purchase History",
+    "yourRecentPurchasesWillAppearHere": "Your recent purchases will appear here",
+    "products": "Products",
+    "viewDetails": "View Details",
+    "posts": "Posts",
+    "noPostsUploaded": "No posts uploaded",
+    "password": "Password",
+    "update": "Update",
+    "changePassword": "Change Password",
+    "oldPassword": "Old Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "save": "Save",
+    "saveChanges": "Save Changes",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteAccount": "Delete Account",
+    "deleteAccountMessage": "Are you sure you want to delete your account?",
+    "deleteAccountDescription": "This action cannot be undone.",
+    "productsTab": "Products",
+    "contactRequestsTab": "Contact Requests",
+    "addressNotProvided": "Address not provided",
+    "productDeleted": "Product deleted successfully!",
+    "profileUpdated": "Profile updated successfully!",
+    "failedToUpdateProfile": "Failed to update profile.",
+    "failedToFetchProducts": "Failed to fetch products.",
+    "sentRequests": "Sent Requests",
+    "noSentRequests": "No sent requests.",
+    "receivedRequests": "Received Requests",
+    "from": "From",
+    "product": "Product",
+    "status": "Status",
+    "requestedAt": "Requested At",
+    "requestedQuantity": "Requested Quantity",
+    "finalQuantity": "Final Quantity",
+    "finalPrice": "Final Price",
+    "farmerContactInfo": "Farmer Contact Info",
+    "userFeedback": "User Feedback",
+    "farmerFeedback": "Farmer Feedback",
+    "adminNote": "Admin Note",
+    "accept": "Accept",
+    "reject": "Reject",
+    "completed": "Completed",
+    "disputed": "Disputed",
+    "didYouBuy": "Did you buy this product?",
+    "confirmSale": "Confirm Sale",
+    "statuses": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "completed": "Completed",
+      "disputed": "Disputed",
+      "not_completed": "Not Completed",
+      "expired": "Expired"
+    }
+  }
+}

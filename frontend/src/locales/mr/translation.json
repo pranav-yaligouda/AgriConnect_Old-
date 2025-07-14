@@ -1,0 +1,334 @@
+{
+  "manageProducts": {
+    "product": "उत्पादन",
+    "category": "श्रेणी",
+    "price": "किंमत",
+    "stock": "साठा",
+    "status": "स्थिती",
+    "harvestDate": "कापणीची तारीख",
+    "minimumOrderQuantity": "किमान ऑर्डर प्रमाण",
+    "actions": "क्रिया",
+    "organic": "सेंद्रिय",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय"
+  },
+  "about": {
+    "hero": {
+      "title": "AgriConnect बद्दल",
+      "tagline": "कृषी सशक्त करणे, समुदाय जोडणे",
+      "chip1": "नवोपक्रम",
+      "chip2": "समुदाय",
+      "chip4": "आधुनिक तंत्रज्ञान"
+    },
+    "mission": {
+      "title": "आमचे मिशन",
+      "paragraph1": "AgriConnect चे मिशन म्हणजे शेत ते टेबल प्रवासात क्रांती घडवणे. शेतकऱ्यांना थेट ग्राहकांशी जोडून, आम्ही पारदर्शकता, न्याय्य व्यापार आणि शाश्वत पद्धती सुनिश्चित करतो ज्या अन्न पुरवठा साखळीत सर्वांना फायदेशीर ठरतात.",
+      "paragraph2": "आम्ही स्थानिक कृषी, डिजिटल सशक्तीकरण आणि हरित पृथ्वीला प्रोत्साहन देतो—ताज्या, उच्च दर्जाच्या उत्पादनांना सर्वांसाठी उपलब्ध करून देतो आणि ग्रामीण उपजीविका आणि नवोपक्रमाला समर्थन देतो."
+    },
+    "highlights": {
+      "title": "AgriConnect का वेगळे आहे",
+      "feature1": "पारदर्शक, कमिशनशिवाय व्यवहारांसाठी शेतकरी आणि खरेदीदारांना थेट जोडणे.",
+      "feature2": "शेती उत्पादनांची सहज खरेदी आणि विक्रीसाठी मार्केटप्लेस.",
+      "feature3": "सुरक्षित, आधुनिक तंत्रज्ञान (MERN) मजबूत प्रमाणीकरण आणि गोपनीयता नियंत्रणांसह.",
+      "feature4": "सुलभतेसाठी डिझाइन केलेले, मोबाइल-प्रथम आणि डेस्कटॉप-रेडी, सुंदर आणि सहज UI सह.",
+      "tagline": "#GrowTogether"
+    },
+    "developer": {
+      "linkedin": {},
+      "github": {
+        "tooltip": "GitHub"
+      },
+      "twitter": {
+        "tooltip": "Twitter"
+      },
+      "bio": "कृषी, शाश्वतता आणि समुदायांसाठी प्रभावी डिजिटल सोल्यूशन्स तयार करण्याची आवड. स्वच्छ कोड, आधुनिक डिझाइन आणि वापरकर्ता-केंद्रित अनुभवासाठी समर्पित.",
+      "mission": "माझे मिशन म्हणजे शेतकरी, विक्रेते आणि ग्राहकांना सहज, विश्वासार्ह आणि स्केलेबल तंत्रज्ञानाद्वारे सक्षम करणे. पारंपारिक कृषी आणि आधुनिक डिजिटल साधनांमधील दरी कमी करून सर्व भागधारकांसाठी पारदर्शकता, कार्यक्षमता आणि वाढ वाढवण्यावर माझा विश्वास आहे.",
+      "collab": "हा प्रकल्प सहकार्य, अभिप्राय आणि योगदानासाठी खुला आहे. चला एकत्र येऊन शाश्वत भविष्य घडवूया—प्रत्येक कोडच्या ओळीने."
+    },
+    "values": {
+      "title": "आमच्या मूल्यां",
+      "sustainability": "शाश्वतता",
+      "sustainability.description": "पर्यावरणपूरक कृषी पद्धतींना प्रोत्साहन देणे आणि अन्न अंतर कमी करणे",
+      "transparentConnections": "पारदर्शक कनेक्शन",
+      "transparentConnections.description": "शेतकरी आणि खरेदीदारांना थेट जोडणे, पारदर्शक आणि कमिशनशिवाय व्यवहारांसाठी.",
+      "qualityAssurance": "गुणवत्ता आश्वासन",
+      "qualityAssurance.description": "सर्वोत्तम उत्पादने सुनिश्चित करण्यासाठी कठोर गुणवत्ता तपासणी",
+      "farmerSupport": "शेतकरी समर्थन",
+      "farmerSupport.description": "शेतकऱ्यांना योग्य किंमत आणि बाजारपेठ उपलब्ध करून देणे"
+    }
+  },  
+  "home": {
+    "hero": {
+      "title": "कृषी सशक्त करणे, समुदाय जोडणे",
+      "subtitle": "AgriConnect मध्ये आपले स्वागत आहे: शेतकरी आणि ग्राहक यांच्यातील दरी कमी करा, शाश्वत भविष्यासाठी.",
+      "exploreMarketplace": "मार्केटप्लेस एक्सप्लोर करा",
+      "register": "नोंदणी करा",
+      "goToDashboard": "डॅशबोर्डवर जा"
+    },
+    "features": {
+      "title": "AgriConnect का निवडावे?",
+      "freshProduce": {
+        "title": "ताजे उत्पादने",
+        "description": "स्थानिक शेतकऱ्यांकडून थेट ताज्या उत्पादनांचा लाभ घ्या."
+      },
+      "localSourcing": {
+        "title": "स्थानिक स्रोत",
+        "description": "स्थानिक आणि शाश्वत स्रोत वापरून आपल्या समुदायाला समर्थन द्या."
+      },
+      "secureTransactions": {
+        "title": "सुरक्षित व्यवहार",
+        "description": "आपले पेमेंट आणि डेटा प्रगत सुरक्षेसह सुरक्षित आहेत."
+      },
+      "communitySupport": {
+        "title": "समुदाय समर्थन",
+        "description": "AgriConnect समुदायासोबत मदत मिळवा आणि एकत्र वाढा."
+      },
+      "connections": {
+        "title": "कनेक्शन",
+        "description": "शेतकरी, खरेदीदार आणि कृषी उत्साहींसोबत आपले नेटवर्क तयार करा आणि व्यवस्थापित करा."
+      },
+      "fastDelivery": {
+        "title": "वेगवान वितरण",
+        "description": "आपल्या उत्पादनांचे वेगवान आणि विश्वासार्ह वितरण."
+      }
+    },
+    "featuresBoxes": {
+      "freshProduce": {
+        "title": "ताजे उत्पादने",
+        "description": "स्थानिक शेतकऱ्यांकडून थेट ताज्या उत्पादनांचा लाभ घ्या."
+      },
+      "localSourcing": {
+        "title": "स्थानिक स्रोत",
+        "description": "स्थानिक आणि शाश्वत स्रोत वापरून आपल्या समुदायाला समर्थन द्या."
+      },
+      "secureTransactions": {
+        "title": "सुरक्षित व्यवहार",
+        "description": "आपले पेमेंट आणि डेटा प्रगत सुरक्षेसह सुरक्षित आहेत."
+      },
+      "communitySupport": {
+        "title": "समुदाय समर्थन",
+        "description": "AgriConnect समुदायासोबत मदत मिळवा आणि एकत्र वाढा."
+      }
+    },
+    "cta": {
+      "title": "आजच AgriConnect मध्ये सामील व्हा!",
+      "subtitle": "आता साइन अप करा आणि कृषी क्रांतीचा भाग व्हा.",
+      "signUp": "साइन अप करा"
+    }
+  },
+  "productDetails": {
+    "isOrganic": "सेंद्रिय",
+    "soldBy": "विक्री करणारे",
+    "harvestDate": "कापणीची तारीख",
+    "productLocation": "उत्पादन स्थान",
+    "availableQuantity": "उपलब्ध प्रमाण",
+    "minimumOrderQuantity": "किमान ऑर्डर प्रमाण",
+    "notSet": "सेट केलेले नाही",
+    "contactSeller": "विक्रेत्याशी संपर्क साधा",
+    "productDetails": "उत्पादन तपशील",
+    "nutritionalInfo": "पोषण माहिती",
+    "sellerInfo": "विक्रेता माहिती",
+    "aboutThisProduct": "या उत्पादनाबद्दल",
+    "keyFeatures": "मुख्य वैशिष्ट्ये",
+    "freshlyHarvested": "ताज्या कापणीचे",
+    "organicallyGrown": "सेंद्रिय पद्धतीने वाढवलेले",
+    "directlySourced": "थेट मिळवलेले",
+    "nutritionalInformation": "पोषण माहिती",
+    "certifiedFarmer": "प्रमाणित शेतकरी",
+    "farmerLocation": "शेतकऱ्याचे स्थान",
+    "nutrition": {
+      "calories": "कॅलरीज",
+      "protein": "प्रोटीन",
+      "carbs": "कार्बोहायड्रेट",
+      "fat": "फॅट",
+      "fiber": "फायबर",
+      "vitamins": "व्हिटॅमिन्स"
+    }
+  },
+  "register": {
+    "title": "नोंदणी करा",
+    "accountType": "खाते प्रकार",
+    "username": "वापरकर्ता नाव",
+    "usernameLoading": "वापरकर्ता नाव तयार होत आहे...",
+    "usernameHelper": "एक अद्वितीय वापरकर्ता नाव निवडा. आपण ते स्वयंचलितपणे तयार करू शकता.",
+    "suggestUsername": "वापरकर्ता नाव सुचवा",
+    "name": "नाव",
+    "email": "ईमेल",
+    "phone": "फोन नंबर",
+    "password": "पासवर्ड",
+    "passwordHelper": "पासवर्ड किमान 7 अक्षरांचा असावा आणि त्यात अक्षरे, संख्या आणि चिन्हे असू शकतात.",
+    "confirmPassword": "पासवर्डची पुष्टी करा",
+    "street": "रस्ता पत्ता",
+    "district": "जिल्हा",
+    "state": "राज्य",
+    "zipcode": "पिन कोड",
+    "readyToCreateAccount": "आपण खाते तयार करण्यास तयार आहात का?",
+    "clickRegisterToCompleteRegistration": "नोंदणी क्लिक करा आणि आपली नोंदणी पूर्ण करा.",
+    "validation": {
+      "roleRequired": "भूमिका आवश्यक आहे.",
+      "usernamePattern": "वापरकर्ता नावात फक्त अक्षरे, संख्या आणि अंडरस्कोर असू शकतात.",
+      "usernameRequired": "वापरकर्ता नाव आवश्यक आहे.",
+      "nameRequired": "नाव आवश्यक आहे.",
+      "invalidEmail": "अवैध ईमेल पत्ता.",
+      "emailRequired": "ईमेल आवश्यक आहे.",
+      "phoneInvalid": "अवैध फोन नंबर.",
+      "phoneRequired": "फोन नंबर आवश्यक आहे.",
+      "passwordPattern": "पासवर्ड किमान 7 अक्षरांचा असावा.",
+      "passwordRequired": "पासवर्ड आवश्यक आहे.",
+      "passwordsMustMatch": "पासवर्ड जुळले पाहिजेत.",
+      "confirmPasswordRequired": "कृपया आपला पासवर्ड पुष्टी करा.",
+      "districtRequired": "जिल्हा आवश्यक आहे.",
+      "stateRequired": "राज्य आवश्यक आहे."
+    },
+    "success": "नोंदणी यशस्वी!",
+    "error": "नोंदणी अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+  },
+  "dashboard": {
+    "welcome":"स्वागत",
+    "dashboard":"डॉशबोर्ड",
+    "recentlyAddedProducts":"नवीनतय उत्पादने",
+    "addNewProduct":"नवीन उत्पादन जोडा",
+    "manageProducts":"उत्पादन संवाद",
+    "quickActions": "त्वरित क्रिया",
+    "browseProducts":"उत्पादने पूर्वावलोकन",
+    "bulkOrders":"बंध आर्डर",
+    "recentBulkOrders":"नव्व बंध आर्डर",
+    "farmer":"शेतकरी",
+    "availableProducts":"उपलब्ध उत्पादन",
+    "available":"उपलब्ध",
+    "viewDetails":"विवरण",
+    "bulkOrder":"बंध आर्डर",
+    "viewProfile":"प्रोफाइल",
+    "product":"उत्पादन",
+    "organic":"जन्मात्र",
+    "productName":"उत्पादन नाव",
+    "category":"श्रेणी",
+    "vegetables": "भाज्या",
+    "fruits": "फळे",
+    "grains": "धान्ये",
+    "dairy": "दुग्धजन्य पदार्थ",
+    "meat": "मांस",
+    "poultry": "पोल्ट्री",
+    "other": "इतर",
+    "unit":"इकाई",
+    "kilogram":"किलोग्राम",
+    "gram":"ग्राम",
+    "pound":"पॉंड",
+    "piece":"किंवा",
+    "dozen":"दोजन",
+    "bunch":"बंस",
+    "availableQuantity":"उपलब्ध प्रमाण",
+    "isOrganic":"सेंद्रिय",
+    "description":"विवरण",
+    "organicProduct":"सेंद्रिय उत्पादन",
+    "productImages":"उत्पादन चित्र",
+    "UploadImages":"चित्र आला",
+    "cancel":"रद्द करा",
+    "addProduct":"उत्पादन जोडा",
+    "district":"जिल्हा",
+    "state":"राज्य",
+    "minimumOrderQuantity":"किमान ऑर्डर प्रमाण",
+    "price":"मूल्य",
+    "stock":"स्टॉक",
+    "harvestDate":"कापणीची तारीख",
+    "totalInventoryValue":"संस्कृतिकरण विनिमय",
+    "orderHistory": "ऑर्डर इतिहास",
+    "orderId": "ऑर्डर आयडी",
+    "date": "दिनांक",
+    "items": "आयटम्स",
+    "amount": "रक्कम",
+    "status": "स्थिती",
+    "actions": "क्रिया"
+  },
+  "login": {
+    "title": "लॉगिन करा",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "signIn": "साइन इन करा",
+    "noAccount": "खाते नाही? आत्ता नोंदणी करा!",
+    "loading": "लॉगिन होत आहे...",
+    "validation": {
+      "invalidEmail": "अवैध ईमेल पत्ता.",
+      "emailRequired": "ईमेल आवश्यक आहे.",
+      "passwordRequired": "पासवर्ड आवश्यक आहे."
+    },
+    "success": "लॉगिन यशस्वी!",
+    "error": "लॉगिन अयशस्वी. कृपया आपली माहिती तपासा आणि पुन्हा प्रयत्न करा."
+  },
+  "profile": {
+    "title": "प्रोफाइल",
+    "name": "नाव",
+    "farmer": "शेतकरी",
+    "customer": "ग्राहक",
+    "vendor": "विक्रेता",
+    "memberSince": "सदस्य म्हणून",
+    "editProfile": "प्रोफाइल संपादित करा",
+    "deleteAccountConfirm": "खाते हटविण्याची पुष्टी करा? ही क्रिया परत येणार नाही.",
+    "confirmProductDeletion": "उत्पादन हटवा",
+    "confirmProductDeletionText": "तुम्हाला हे उत्पादन खरोखर हटवायचे आहे का? ही क्रिया परत येणार नाही.",
+    "confirmDelete": "हटवा",
+    "email": "ई-मेल",
+    "phone": "फोन क्रमांक",
+    "district": "जिल्हा",
+    "state": "राज्य",
+    "zipCode": "पिन कोड",
+    "address": "पत्ता",
+    "orders": "ऑर्डर्स",
+    "noRecentOrders": "अलीकडील ऑर्डर्स नाहीत",
+    "history": "इतिहास",
+    "purchaseHistory": "खरेदी इतिहास",
+    "yourRecentPurchasesWillAppearHere": "इथे तुमची अलीकडील खरेदी दिसतील",
+    "products": "उत्पादने",
+    "viewDetails": "तपशील पहा",
+    "posts": "पोस्ट्स",
+    "noPostsUploaded": "कोणतीही पोस्ट्स अपलोड केलेल्या नाहीत",
+    "password": "पासवर्ड",
+    "update": "अद्यतनित करा",
+    "changePassword": "पासवर्ड बदला",
+    "oldPassword": "जुना पासवर्ड",
+    "newPassword": "नवीन पासवर्ड",
+    "confirmPassword": "पासवर्डची पुष्टी करा",
+    "save": "जतन करा",
+    "saveChanges": "बदल जतन करा",
+    "cancel": "रद्द करा",
+    "delete": "हटवा",
+    "deleteAccount": "खाते हटवा",
+    "deleteAccountMessage": "तुम्हाला खाते हटवायचे असल्याची खात्री आहे का?",
+    "deleteAccountDescription": "ही क्रिया परत येणार नाही.",
+    "productsTab": "उत्पादने",
+    "contactRequestsTab": "संपर्क विनंत्या",
+    "addressNotProvided": "पत्ता उपलब्ध नाही",
+    "productDeleted": "उत्पादन यशस्वीपणे हटवले!",
+    "profileUpdated": "प्रोफाइल यशस्वीपणे अद्यतनित केले!",
+    "failedToUpdateProfile": "प्रोफाइल अद्यतनित करण्यात अयशस्वी.",
+    "failedToFetchProducts": "उत्पादने आणण्यात अयशस्वी.",
+    "sentRequests": "पाठवलेल्या विनंत्या",
+    "noSentRequests": "कोणतीही पाठवलेल्या विनंत्या नाहीत.",
+    "receivedRequests": "मिळालेल्या विनंत्या",
+    "from": "कडून",
+    "product": "उत्पादन",
+    "status": "स्थिती",
+    "requestedAt": "विनंतीची तारीख",
+    "requestedQuantity": "विनंती केलेले प्रमाण",
+    "finalQuantity": "अंतिम प्रमाण",
+    "finalPrice": "अंतिम किंमत",
+    "farmerContactInfo": "शेतकरी संपर्क माहिती",
+    "userFeedback": "वापरकर्ता अभिप्राय",
+    "farmerFeedback": "शेतकरी अभिप्राय",
+    "adminNote": "प्रशासक टीप",
+    "accept": "स्वीकारा",
+    "reject": "नाकार",
+    "completed": "पूर्ण झाले",
+    "disputed": "विवादित",
+    "didYouBuy": "तुम्ही हे उत्पादन खरेदी केले का?",
+    "confirmSale": "विक्रीची पुष्टी करा",
+    "statuses": {
+      "pending": "प्रलंबित",
+      "accepted": "स्वीकारले",
+      "completed": "पूर्ण झाले",
+      "disputed": "विवादित",
+      "not_completed": "पूर्ण झाले नाही",
+      "expired": "कालबाह्य"
+    }
+  }
+}

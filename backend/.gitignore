@@ -1,0 +1,19 @@
+# Environment files
+.env
+.env.*
+*.env
+
+# Logs
+logs
+*.log
+
+# Uploads
+uploads
+
+# Node
+node_modules
+.DS_Store
+
+# Build files
+build
+*.map
