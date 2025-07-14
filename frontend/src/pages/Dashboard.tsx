@@ -88,8 +88,7 @@ interface User {
     state: string;
     zipcode: string;
   };
-  profileImage: string | { data: string, contentType: string };
-  profileImages?: string[];
+  profileImageUrl?: string; // Cloudinary URL
   joinDate: string;
 }
 
@@ -122,25 +121,12 @@ interface NewProductData {
 
 function getProfileImageSrc(user: User | null): string {
   if (!user) return getRoleProfilePlaceholder();
-  const img = user.profileImage;
-
-  // Case 1: Object with base64 data
-  if (img && typeof img === "object" && "data" in img && "contentType" in img && img.data && img.contentType) {
-    return `data:${img.contentType};base64,${img.data}`;
+  
+  // Use profileImageUrl if available (Cloudinary URL)
+  if (user.profileImageUrl) {
+    return user.profileImageUrl;
   }
-
-  // Case 2: String - data URL or non-placeholder URL
-  if (typeof img === "string" && img.length > 0) {
-    // Accept data URLs or any non-placeholder URLs
-    if (img.startsWith('data:image/')) {
-      return img;
-    }
-    // Exclude known placeholders
-    if (!img.includes('farmerProfilePlaceholder.png') && !img.includes('vendorProfilePlaceholder.png') && !img.includes('userProfilePlaceholder.png')) {
-      return img;
-    }
-  }
-
+  
   // Fallback: Placeholder
   return getRoleProfilePlaceholder(user.role);
 }

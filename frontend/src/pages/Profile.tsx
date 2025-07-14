@@ -124,8 +124,6 @@ interface EditForm {
 
 function isPlaceholder(url?: string): boolean {
   if (!url) return true;
-  // If it's a base64 data URL, it's not a placeholder
-  if (url.startsWith('data:image/')) return false;
   return (
     url.includes('farmerProfilePlaceholder.png') ||
     url.includes('vendorProfilePlaceholder.png') ||
@@ -144,15 +142,7 @@ function getRoleProfilePlaceholder(role?: string): string {
   }
 }
 
-// Utility: Convert File to base64 string
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+
 
 // Best-practice EditableProfileAvatar component
 const EditableProfileAvatar = ({

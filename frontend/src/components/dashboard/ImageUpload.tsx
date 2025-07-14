@@ -38,7 +38,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ images, onImagesChange, uploa
         variant="outlined"
         component="label"
         disabled={uploading}
-        onClick={() => fileInputRef.current?.click()}
       >
         Upload Images
         <input
