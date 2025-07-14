@@ -21,7 +21,22 @@ class Config {
   get(key) {
     const value = process.env[key];
     if (value === undefined) {
-      console.warn(`Environment variable ${key} is not set`);
+      // Provide defaults for optional variables
+      const defaults = {
+        'FRONTEND_URL': 'http://localhost:3000',
+        'RATE_LIMIT_MAX': '100',
+        'UPLOAD_DIR': 'uploads',
+        'MAX_FILE_SIZE': '5242880',
+        'ALLOWED_FILE_TYPES': 'image/jpeg,image/png,image/jpg',
+        'ALLOWED_ORIGINS': 'http://localhost:3000'
+      };
+      
+      if (defaults[key]) {
+        console.warn(`Environment variable ${key} is not set, using default: ${defaults[key]}`);
+        return defaults[key];
+      } else {
+        console.warn(`Environment variable ${key} is not set`);
+      }
     }
     return value;
   }
@@ -61,12 +76,7 @@ class Config {
       'NODE_ENV',
       'PORT',
       'MONGODB_URI',
-      'JWT_SECRET',
-      'FRONTEND_URL',
-      'RATE_LIMIT_MAX',
-      'UPLOAD_DIR',
-      'MAX_FILE_SIZE',
-      'ALLOWED_FILE_TYPES'
+      'JWT_SECRET'
     ];
 
     const missing = required.filter(key => !this.get(key));
@@ -88,13 +98,8 @@ class Config {
       },
       {
         key: 'MONGODB_URI',
-        validate: value => value.startsWith('mongodb'),
+        validate: value => value && value.startsWith('mongodb'),
         message: 'MONGODB_URI must be a valid MongoDB connection string'
-      },
-      {
-        key: 'MAX_FILE_SIZE',
-        validate: value => !isNaN(value) && value > 0,
-        message: 'MAX_FILE_SIZE must be a positive number'
       }
     ];
 

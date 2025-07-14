@@ -10,7 +10,9 @@
     "deploy-check": "node scripts/deploy.js check",
     "deploy": "node scripts/deploy.js deploy",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "render-build": "npm install",
+    "render-start": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
