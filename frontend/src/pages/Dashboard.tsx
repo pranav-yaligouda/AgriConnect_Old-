@@ -126,7 +126,7 @@ function getProfileImageSrc(user: User | null): string {
   if (user.profileImageUrl) {
     return user.profileImageUrl;
   }
-  
+
   // Fallback: Placeholder
   return getRoleProfilePlaceholder(user.role);
 }
@@ -310,7 +310,7 @@ const Dashboard = () => {
       let createdProduct;
       try {
         createdProduct = await addProduct(productData);
-      } catch (err: any) {
+    } catch (err: any) {
         setProductImageError(err.message || 'Failed to create product');
         toast.error(err.message || 'Failed to create product');
         setUploadingProductImages(false);
