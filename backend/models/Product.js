@@ -26,7 +26,7 @@ const productSchema = new mongoose.Schema({
     enum: ['vegetables', 'fruits', 'grains', 'dairy', 'meat', 'poultry', 'other']
   },
   images: [{
-    type: String
+    type: String // Cloudinary URL
   }],
   farmer: {
     type: mongoose.Schema.Types.ObjectId,

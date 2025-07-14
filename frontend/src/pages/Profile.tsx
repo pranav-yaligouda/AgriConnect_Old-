@@ -55,6 +55,8 @@ import { toast } from "react-toastify";
 import { useTheme } from "@mui/material/styles";
 
 import { useTranslation } from "react-i18next";
+import ImageUpload from '../components/dashboard/ImageUpload';
+import { uploadProfileImageFile } from '../services/apiService';
 
 // Local TabPanel implementation for accessibility and correct props
 type TabPanelProps = {
@@ -101,6 +103,7 @@ interface User {
   };
   createdAt: string;
   username?: string;
+  profileImageUrl?: string; // Added for Cloudinary URL
 }
 
 // Use the Product type from apiService for consistency with backend responses
@@ -169,8 +172,8 @@ const EditableProfileAvatar = ({
 
   const getAvatarSrc = () => {
     if (preview) return preview;
-    if (user?.profileImage && user.profileImage.data && user.profileImage.contentType) {
-      return `data:${user.profileImage.contentType};base64,${user.profileImage.data}`;
+    if (user?.profileImageUrl) {
+      return user.profileImageUrl;
     }
     return getRoleProfilePlaceholder(user?.role);
   };
@@ -282,9 +285,10 @@ const Profile = () => {
     },
   });
   // Profile image upload state for edit dialog
-  const [profileImageUploading, setProfileImageUploading] = useState(false);
-  const [selectedProfileImage, setSelectedProfileImage] = useState<File | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+  const [profileImageError, setProfileImageError] = useState<string | null>(null);
   const [loadingIds, setLoadingIds] = useState<string[]>([]);
 
   // Add state for confirmation dialogs
@@ -302,26 +306,29 @@ const Profile = () => {
   const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
 
   // Handle profile image upload
+  const handleProfileImageChange = (files: File[], previewUrls: string[]) => {
+    setProfileImageFile(files[0] || null);
+    setProfileImagePreview(previewUrls[0] || null);
+    setProfileImageError(null);
+  };
+
   const handleProfileImageUpload = async () => {
-    if (!selectedProfileImage) return;
-    setProfileImageUploading(true);
+    if (!profileImageFile) return;
+    setUploadingProfileImage(true);
+    setProfileImageError(null);
     try {
-      const base64 = await fileToBase64(selectedProfileImage);
-      await updateProfile({
-        ...editForm,
-        profileImage: {
-          data: base64,
-          contentType: selectedProfileImage.type,
-        },
-      });
-      await fetchUserProfileData();
-      setProfileImagePreview(null);
-      setSelectedProfileImage(null);
+      const updated = await uploadProfileImageFile(profileImageFile);
+      // Update user profile state with new image URL
+      // (Assume fetchUserProfile or similar is called after upload)
       toast.success('Profile image updated!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload profile image');
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
+      // Optionally, refetch user profile here
+    } catch (err: any) {
+      setProfileImageError(err.message || 'Failed to upload image');
+      toast.error(err.message || 'Failed to upload image');
     } finally {
-      setProfileImageUploading(false);
+      setUploadingProfileImage(false);
     }
   };
 
@@ -466,43 +473,36 @@ useEffect(() => {
 
   // Handle profile image selection in edit dialog
   const handleProfileImageSelected = (file: File | null) => {
-    setSelectedProfileImage(file);
+    setProfileImageFile(file);
     setProfileImagePreview(file ? URL.createObjectURL(file) : null);
   };
 
   // When user submits the edit profile form, upload the image if selected
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileImageUploading(true);
+    setUploadingProfileImage(true);
+    setProfileImageError(null);
     try {
-      if (selectedProfileImage) {
-        const base64 = await fileToBase64(selectedProfileImage);
-        await updateProfile({
-          ...editForm,
-          profileImage: {
-            data: base64,
-            contentType: selectedProfileImage.type,
-          },
-        });
-      } else {
-        await updateProfile(editForm);
+      let profileImageUrl = undefined;
+      if (profileImageFile) {
+        // Upload image first
+        const imgRes = await uploadProfileImageFile(profileImageFile);
+        profileImageUrl = imgRes.profileImageUrl;
       }
+      // Prepare profile update payload
+      const payload = { ...editForm };
+      if (profileImageUrl) payload.profileImageUrl = profileImageUrl;
+      await updateProfile(payload);
       await fetchUserProfileData();
       setIsEditDialogOpen(false);
-      setSelectedProfileImage(null);
+      setProfileImageFile(null);
       setProfileImagePreview(null);
       toast.success(t('profile.profileUpdated'));
     } catch (error: any) {
-      console.error("Update error:", error);
-      if (error.details) {
-        Object.values(error.details).forEach((message) => {
-          toast.error(String(message));
-        });
-      } else {
-        toast.error(String(error.message || t('profile.failedToUpdateProfile')));
-      }
+      setProfileImageError(error.message || 'Failed to update profile');
+      toast.error(error.message || t('profile.failedToUpdateProfile'));
     } finally {
-      setProfileImageUploading(false);
+      setUploadingProfileImage(false);
     }
   };
 
@@ -698,13 +698,7 @@ useEffect(() => {
         >
           {/* Avatar with border, shadow, and overlap */}
           <Avatar
-            src={
-              profileImagePreview ||
-              (user?.profileImage && user.profileImage.data && user.profileImage.contentType
-                ? `data:${user.profileImage.contentType};base64,${user.profileImage.data}`
-                : getRoleProfilePlaceholder(user?.role)
-              )
-            }
+            src={profileImagePreview || user?.profileImageUrl || getRoleProfilePlaceholder(user?.role)}
             alt={user?.name || 'Profile'}
             sx={{
               width: { xs: 112, sm: 144 },
@@ -1252,11 +1246,14 @@ useEffect(() => {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1, mb: 2 }}>
             <EditableProfileAvatar
               user={user}
-              onImageSelected={handleProfileImageSelected}
-              loading={profileImageUploading}
+              onImageSelected={setProfileImageFile}
+              loading={uploadingProfileImage}
               preview={profileImagePreview}
               setProfileImagePreview={setProfileImagePreview}
             />
+            {profileImageError && (
+              <Alert severity="error" sx={{ mt: 2 }}>{profileImageError}</Alert>
+            )}
           </Box>
           <Grid container spacing={2}>
             <Grid item xs={12}>

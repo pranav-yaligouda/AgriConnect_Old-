@@ -479,6 +479,7 @@ interface Product {
       district: string;
       state: string;
     };
+    profileImageUrl?: string; // Added profileImageUrl
   };
   farmerId: string;
 }
@@ -708,13 +709,7 @@ const ProductDetails = () => {
             >
               <Box sx={{ mr: 2 }}>
                 <Avatar
-                  src={
-                    product.farmer.profileImage && typeof product.farmer.profileImage === 'object' && product.farmer.profileImage.data && product.farmer.profileImage.contentType
-                      ? `data:${product.farmer.profileImage.contentType};base64,${product.farmer.profileImage.data}`
-                      : (typeof product.farmer.profileImage === 'string' && product.farmer.profileImage.trim() !== '' && product.farmer.profileImage.startsWith('data:image'))
-                        ? product.farmer.profileImage
-                        : getRoleProfilePlaceholder('farmer')
-                  }
+                  src={product.farmer.profileImageUrl || getRoleProfilePlaceholder('farmer')}
                   sx={{ width: 56, height: 56 }}
                 />
               </Box>
@@ -948,11 +943,7 @@ const ProductDetails = () => {
                   <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                     <Avatar
                       src={
-                        product.farmer.profileImage && typeof product.farmer.profileImage === 'object' && product.farmer.profileImage.data && product.farmer.profileImage.contentType
-                          ? `data:${product.farmer.profileImage.contentType};base64,${product.farmer.profileImage.data}`
-                          : (typeof product.farmer.profileImage === 'string' && product.farmer.profileImage.trim() !== '' && product.farmer.profileImage.startsWith('data:image'))
-                            ? product.farmer.profileImage
-                            : getRoleProfilePlaceholder('farmer')
+                        product.farmer.profileImageUrl || getRoleProfilePlaceholder('farmer')
                       }
                       sx={{ width: 80, height: 80, mr: 3 }}
                     />

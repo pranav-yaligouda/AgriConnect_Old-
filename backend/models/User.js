@@ -77,10 +77,10 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
-  // Single profile image (base64 string and content type)
-  profileImage: {
-    data: { type: String, default: null },
-    contentType: { type: String, default: null }
+  // Cloudinary profile image URL
+  profileImageUrl: {
+    type: String,
+    default: null
   },
   // Email verification status
   isVerified: {

@@ -9,7 +9,7 @@ This document provides a comprehensive overview of all API endpoints for the Agr
 1. [User Authentication & Profile](#user-authentication--profile)
 2. [Product Management](#product-management)
 3. [Posts/Community](#postscommunity)
-4. [Image Upload (Products Only)](#image-upload-products-only)
+4. [Image Upload (Products & Profile)](#image-upload-products--profile)
 5. [Frontend API Usage](#frontend-api-usage)
 6. [Authentication](#authentication)
 7. [Profile Image Handling](#profile-image-handling)
@@ -39,7 +39,8 @@ This document provides a comprehensive overview of all API endpoints for the Agr
     "district": "string",
     "state": "string",
     "zipcode": "string"
-  }
+  },
+  "profileImageUrl": "https://..." // (optional, set after upload)
 }
 ```
 
@@ -51,7 +52,7 @@ This document provides a comprehensive overview of all API endpoints for the Agr
 }
 ```
 
-**Logic:** Stores user with hashed password, assigns a role-based placeholder image, and returns a JWT.
+**Logic:** Stores user with hashed password, assigns a role-based placeholder image if no profileImageUrl, and returns a JWT.
 
 ---
 
@@ -99,23 +100,20 @@ Authorization: Bearer <token>
   "email": "...",
   "phone": "...",
   "role": "...",
-  "profileImage": {
-    "data": "base64string",
-    "contentType": "image/png"
-  },
+  "profileImageUrl": "https://...",
   "address": { ... },
   "createdAt": "..."
 }
 ```
 
-**Logic:** Auth required. Returns user info including base64 profile image.
+**Logic:** Auth required. Returns user info including profileImageUrl.
 
 ---
 
 ### 1.4 Update Profile
 **Endpoint:** `PATCH /api/users/profile`
 
-**Purpose:** Update current user's profile (including profile image).
+**Purpose:** Update current user's profile (excluding image upload).
 
 **Headers:**
 ```
@@ -124,24 +122,39 @@ Authorization: Bearer <token>
 
 **Request Body:**
 - Any updatable fields (name, phone, address, etc.)
-- For profile image:
-```json
-"profileImage": {
-  "data": "base64string",
-  "contentType": "image/png"
-}
-```
+- For profile image, use the dedicated upload endpoint below.
 
 **Response:** `200 OK`
 ```json
 { "message": "Profile updated", "user": { ...updatedUser } }
 ```
 
-**Logic:** Updates fields and/or profile image (base64 only).
+---
+
+### 1.5 Upload Profile Image
+**Endpoint:** `PATCH /api/users/profile/image`
+
+**Purpose:** Upload or update the user's profile image.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Request:**
+- Form field: `profileImage` (file, JPEG/PNG, max 2MB)
+
+**Response:**
+```json
+{ "profileImageUrl": "https://res.cloudinary.com/..." }
+```
+
+**Logic:** Auth required. Uploads image to Cloudinary, updates user's profileImageUrl.
 
 ---
 
-### 1.5 Delete Profile
+### 1.6 Delete Profile
 **Endpoint:** `DELETE /api/users/profile`
 
 **Purpose:** Delete current user's account.
@@ -151,7 +164,7 @@ Authorization: Bearer <token>
 Authorization: Bearer <token>
 ```
 
-**Response:** `200 OK`
+**Response:**
 ```json
 { "message": "Account deleted" }
 ```
@@ -160,7 +173,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 1.6 List Connections
+### 1.7 List Connections
 **Endpoint:** `GET /api/users/connections`
 
 **Purpose:** List user's connections.
@@ -179,7 +192,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 1.7 Get Connection Requests
+### 1.8 Get Connection Requests
 **Endpoint:** `GET /api/users/connection-requests`
 
 **Purpose:** Get pending connection requests.
@@ -198,7 +211,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 1.8 Accept Connection Request
+### 1.9 Accept Connection Request
 **Endpoint:** `POST /api/users/connection-requests/:userId/accept`
 
 **Purpose:** Accept a connection request.
@@ -215,7 +228,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 1.9 Decline Connection Request
+### 1.10 Decline Connection Request
 **Endpoint:** `POST /api/users/connection-requests/:userId/decline`
 
 **Purpose:** Decline a connection request.
@@ -248,7 +261,7 @@ Authorization: Bearer <token>
     "price": ...,
     "unit": "...",
     "category": "...",
-    "images": ["data:image/png;base64,..."],
+    "images": ["https://res.cloudinary.com/..."],
     ...
   },
   ...
@@ -293,17 +306,9 @@ Authorization: Bearer <token>
   "category": "string",
   "description": "string",
   "availableQuantity": number,
-  "images": [
-    {
-      "data": "base64string",
-      "contentType": "image/png"
-    }
-  ],
-  "harvestDate": "YYYY-MM-DD",
-  "location": {
-    "district": "string",
-    "state": "string"
-  }
+  "images": ["https://res.cloudinary.com/..."]
+  // (set after upload)
+  ...
 }
 ```
 
@@ -314,7 +319,30 @@ Authorization: Bearer <token>
 
 ---
 
-### 2.4 Delete Product
+### 2.4 Upload Product Images
+**Endpoint:** `POST /api/products/:id/images`
+
+**Purpose:** Upload images for a product (farmer only).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+**Request:**
+- Form field: `images` (file(s), JPEG/PNG, max 5MB each, up to 5)
+
+**Response:**
+```json
+{ "images": ["https://res.cloudinary.com/...", ...] }
+```
+
+**Logic:** Auth and farmer role required. Uploads images to Cloudinary, appends URLs to product's images array.
+
+---
+
+### 2.5 Delete Product
 **Endpoint:** `DELETE /api/products/:id`
 
 **Purpose:** Delete a product by ID (farmer only).
@@ -331,7 +359,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 2.5 Get Product Details
+### 2.6 Get Product Details
 **Endpoint:** `GET /api/products/:id`
 
 **Purpose:** Get product details by ID.
@@ -379,23 +407,11 @@ Authorization: Bearer <token>
 
 ---
 
-## 4. Image Upload (Products Only)
+## 4. Image Upload (Products & Profile)
 
-### 4.1 Upload Product Images
-**Endpoint:** `POST /api/upload`
-
-**Purpose:** Upload product images (multi-part form, only for products).
-
-**Request:**
-- `type`: "product"
-- `images`: file(s)
-
-**Response:**
-```json
-{ "urls": [ { "url": "..." }, ... ] }
-```
-
-**Note:** For profile images, this is not used anymore. All profile images are handled as base64.
+- **Profile images:** Upload via `PATCH /api/users/profile/image` (multipart/form-data, field: `profileImage`).
+- **Product images:** Upload via `POST /api/products/:id/images` (multipart/form-data, field: `images`).
+- **All images are stored in Cloudinary. Only URLs are saved in MongoDB.**
 
 ---
 
@@ -422,20 +438,10 @@ Authorization: Bearer <token>
 
 ## 7. Profile Image Handling
 - **Upload:**
-  - Profile image is converted to base64 in the browser and sent as:
-    ```json
-    {
-      "profileImage": {
-        "data": "base64string",
-        "contentType": "image/png"
-      }
-    }
-    ```
+  - Use the dedicated endpoint with file upload (not base64).
+  - Store the returned URL in the user's profile.
 - **Display:**
-  - Rendered as:
-    ```tsx
-    src={`data:${user.profileImage.contentType};base64,${user.profileImage.data}`}
-    ```
+  - Use the `profileImageUrl` as the `src` for `<img>` tags.
 
 ---
 
@@ -454,6 +460,7 @@ Authorization: Bearer <token>
 | `/api/users/profile`                              | GET    | Yes  | -                                      | user object                             |
 | `/api/users/profile`                              | PATCH  | Yes  | profile fields, profileImage           | updated user                            |
 | `/api/users/profile`                              | DELETE | Yes  | -                                      | message                                 |
+| `/api/users/profile/image`                        | PATCH  | Yes  | profileImage (file)                    | profileImageUrl                         |
 | `/api/users/connections`                          | GET    | Yes  | -                                      | connection list                         |
 | `/api/users/connection-requests`                  | GET    | Yes  | -                                      | pending requests                        |
 | `/api/users/connection-requests/:userId/accept`   | POST   | Yes  | -                                      | message                                 |
@@ -463,9 +470,9 @@ Authorization: Bearer <token>
 | `/api/products`                                   | POST   | Yes  | product fields, images (base64)        | product                                 |
 | `/api/products/:id`                               | GET    | No   | -                                      | product                                 |
 | `/api/products/:id`                               | DELETE | Yes  | -                                      | message                                 |
+| `/api/products/:id/images`                        | POST   | Yes  | images (files)                         | image URLs                              |
 | `/api/posts`                                      | GET    | No   | -                                      | post list                               |
 | `/api/posts`                                      | POST   | Yes  | title, content                         | post                                    |
-| `/api/upload`                                     | POST   | Yes  | type=product, images (files)           | image URLs (products only)              |
 
 ---
 
@@ -474,7 +481,7 @@ Authorization: Bearer <token>
 - Validate all request data on both frontend and backend.
 - Use JWT for authentication and store tokens securely.
 - Handle errors gracefully and provide user-friendly messages.
-- Store images as base64 in MongoDB for portability and simplicity (profile & product images).
+- **Store images as URLs in MongoDB (Cloudinary).**
 - Keep API documentation up to date with code changes.
 
 ---
