@@ -248,7 +248,8 @@ const uploadProductImages = async (req, res) => {
     const imageUrls = req.files.map(file => file.path);
     product.images.push(...imageUrls);
     await product.save();
-    res.json({ images: product.images });
+    // Robust response for frontend
+    res.json({ urls: imageUrls.map(url => ({ url })) });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading product images', error: error.message });
   }
