@@ -1,20 +1,30 @@
-import React, { ImgHTMLAttributes } from 'react';
+import React, { useState } from 'react';
 
-interface ImageWithFallbackProps extends ImgHTMLAttributes<HTMLImageElement> {
+interface ImageWithFallbackProps {
+  src?: string;
+  alt?: string;
   fallbackSrc?: string;
+  style?: React.CSSProperties;
+  className?: string;
 }
 
-/**
- * A robust image component that falls back to a local asset if the original fails.
- * Usage:
- * <ImageWithFallback src={imageUrl} fallbackSrc="/product-placeholder.jpg" alt="..." />
- */
-const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ fallbackSrc = '/product-placeholder.jpg', ...props }) => {
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = fallbackSrc;
+const defaultPlaceholder = '/images/userProfilePlaceholder.png';
+
+const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ src, alt, fallbackSrc, style, className }) => {
+  const [imgSrc, setImgSrc] = useState(src || fallbackSrc || defaultPlaceholder);
+  const handleError = () => {
+    setImgSrc(fallbackSrc || defaultPlaceholder);
   };
-  return <img {...props} onError={handleError} />;
+  return (
+    <img
+      src={imgSrc}
+      alt={alt || 'image'}
+      style={style}
+      className={className}
+      onError={handleError}
+      loading="lazy"
+    />
+  );
 };
 
 export default ImageWithFallback;

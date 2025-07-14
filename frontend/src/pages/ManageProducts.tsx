@@ -48,6 +48,7 @@ import { useNavigate } from "react-router-dom";
 import { containerPadding } from "../utils/styleUtils";
 
 import { useTranslation } from "react-i18next";
+import { uploadProductImages } from '../services/apiService';
 
 interface Product {
   _id: string;

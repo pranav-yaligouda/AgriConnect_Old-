@@ -126,11 +126,38 @@ export async function updateProfile(editForm: any): Promise<any> {
   }
 }
 
-// Upload only profile image (base64)
-export async function uploadProfileImage(base64: string, contentType: string): Promise<any> {
+// ---- Profile Image Upload (Cloudinary) ----
+/**
+ * Uploads a new profile image for the current user.
+ * @param file The image file to upload
+ * @returns The updated user profile (with new image URL)
+ */
+export async function uploadProfileImageFile(file: File): Promise<any> {
+  const formData = new FormData();
+  formData.append('profileImage', file); // Correct field name for Multer
   try {
-    const response = await api.patch('/users/profile', {
-      profileImage: { data: base64, contentType },
+    const response = await api.patch('/users/profile/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw normalizeApiError(error);
+  }
+}
+
+// ---- Product Image Upload (Cloudinary) ----
+/**
+ * Uploads one or more product images for a given product.
+ * @param productId The product's ID
+ * @param files Array of image files to upload
+ * @returns The updated product (with new image URLs)
+ */
+export async function uploadProductImages(productId: string, files: File[]): Promise<any> {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('images', file));
+  try {
+    const response = await api.post(`/products/${productId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   } catch (error: any) {

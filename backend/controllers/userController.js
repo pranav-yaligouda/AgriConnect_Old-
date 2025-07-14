@@ -91,7 +91,9 @@ const register = async (req, res) => {
       role,
       address,
       phone,
-      profileImages: req.body.profileImages && Array.isArray(req.body.profileImages) && req.body.profileImages.length > 0 ? req.body.profileImages.slice(0, 1) : undefined
+      // Remove base64 profileImages logic
+      // profileImages: req.body.profileImages && Array.isArray(req.body.profileImages) && req.body.profileImages.length > 0 ? req.body.profileImages.slice(0, 1) : undefined
+      profileImageUrl: req.body.profileImageUrl || null
     });
 
     await user.save();
@@ -281,8 +283,8 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const updates = Object.keys(req.body);
-    // Allow profileImage as an object
-    const allowedUpdates = ['name', 'email', 'phone', 'address', 'profileImage'];
+    // Remove base64 profileImage logic
+    const allowedUpdates = ['name', 'email', 'phone', 'address', 'profileImageUrl'];
     const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
     if (!isValidOperation) {
@@ -292,35 +294,25 @@ const updateProfile = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // If profileImage is being updated, expect an object with data (base64 string) and contentType
-    if (req.body.profileImage) {
-      const { data, contentType } = req.body.profileImage;
-      if (!data || typeof data !== 'string' || !contentType || typeof contentType !== 'string') {
-        return res.status(400).json({ message: 'Invalid profile image data.' });
-      }
-      user.profileImage = { data, contentType };
+    // If profileImageUrl is being updated, just set the URL
+    if (req.body.profileImageUrl) {
+      user.profileImageUrl = req.body.profileImageUrl;
     }
 
     // Handle nested address updates
     updates.forEach(update => {
       if (update === 'address') {
-        // Merge address fields
         user.address = { ...user.address, ...req.body.address };
-      } else if (update !== 'profileImage') {
+      } else if (update !== 'profileImageUrl') {
         user[update] = req.body[update];
       }
     });
 
     await user.save();
-
-    // Remove sensitive data before sending response
     const userData = user.toObject();
     delete userData.password;
-
-    // Return profileImage object directly (base64 and contentType)
     res.json(userData);
   } catch (error) {
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = {};
       Object.keys(error.errors).forEach(key => {
@@ -432,6 +424,23 @@ const generateUsername = async (req, res) => {
   }
 };
 
+// Multer+Cloudinary profile image upload handler (to be used in route)
+// Usage: router.patch('/profile/image', auth, upload.single('profileImage'), uploadProfileImage)
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: 'No image uploaded' });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.profileImageUrl = req.file.path;
+    await user.save();
+    res.json({ profileImageUrl: user.profileImageUrl });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading profile image', error: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -442,4 +451,5 @@ module.exports = {
   deleteAccount,
   generateUsername,
   checkPhone,
+  uploadProfileImage, // Export the new handler
 };
