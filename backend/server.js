@@ -93,7 +93,7 @@ const limiter = rateLimit({
 app.use(requestMonitor);
 
 // Input sanitization and validation
-app.use(mongoSanitize()); // Prevent NoSQL injection
+// app.use(mongoSanitize()); // Temporarily disabled due to Express 5.x compatibility
 app.use(xss()); // Prevent XSS attacks
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
