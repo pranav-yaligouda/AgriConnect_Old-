@@ -30,7 +30,10 @@ async function adminLogin(req, res) {
     if (!username || !password || !deviceFingerprint) {
       return res.status(400).json({ message: 'Username, password, and device fingerprint are required' });
     }
-    const user = await User.findOne({ username, role: 'admin' });
+    if (typeof username !== 'string') {
+      return res.status(400).json({ message: 'Invalid username' });
+    }
+    const user = await User.findOne({ username: { $eq: username }, role: 'admin' });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
