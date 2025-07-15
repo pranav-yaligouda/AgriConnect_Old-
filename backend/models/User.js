@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const ADMIN_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1';
+const ADMIN_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0';
 
 // Add indexes for frequently queried fields
 function defineIndexes() {
@@ -98,6 +98,8 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   },
   deviceFingerprint: { type: String, default: null },
+  lastAdminLogin: { type: Date, default: null },
+  adminNotes: { type: String, default: '' },
 });
 
 // Add index for role only (email is already unique via schema)
