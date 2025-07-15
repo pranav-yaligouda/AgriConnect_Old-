@@ -163,8 +163,7 @@ const productSchemas = {
       .messages(messages),
     
     category: Joi.string()
-      .min(2)
-      .max(50)
+      .valid('vegetables', 'fruits', 'grains', 'pulses', 'oilseeds', 'spices', 'dairy')
       .required()
       .messages(messages),
     
@@ -244,8 +243,7 @@ const productSchemas = {
       .messages(messages),
     
     category: Joi.string()
-      .min(2)
-      .max(50)
+      .valid('vegetables', 'fruits', 'grains', 'pulses', 'oilseeds', 'spices', 'dairy')
       .optional()
       .messages(messages),
     
@@ -381,14 +379,16 @@ const adminSchemas = {
       .max(50)
       .required()
       .messages(messages),
-    
     password: Joi.string()
       .required()
       .messages(messages),
-    
     deviceFingerprint: Joi.string()
       .required()
       .messages(messages)
+  }),
+  changeUserRole: Joi.object({
+    userId: Joi.string().pattern(patterns.objectId).required().messages(messages),
+    role: Joi.string().valid('user', 'farmer', 'vendor', 'admin').required().messages(messages)
   })
 };
 

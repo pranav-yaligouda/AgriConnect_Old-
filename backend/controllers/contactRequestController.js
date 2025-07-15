@@ -392,3 +392,29 @@ exports.adminResolveDispute = [authorize('admin'), async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 }];
+
+// Get all contact requests (admin only)
+exports.getAllContactRequests = [require('../middleware/auth').authorize('admin'), async (req, res) => {
+  try {
+    const { page = 1, limit = 20, status, search } = req.query;
+    const query = {};
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { 'requesterName': { $regex: search, $options: 'i' } },
+        { 'farmerName': { $regex: search, $options: 'i' } }
+      ];
+    }
+    const requests = await ContactRequest.find(query)
+      .populate('productId')
+      .populate('farmerId')
+      .populate('requesterId')
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ requestedAt: -1 });
+    const total = await ContactRequest.countDocuments(query);
+    res.json({ requests, total, page: Number(page), limit: Number(limit) });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+}];

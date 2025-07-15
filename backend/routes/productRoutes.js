@@ -20,6 +20,7 @@ const {
 // Public routes
 router.get('/', getProducts);
 router.get('/categories', getCategories);
+router.get('/names', productController.getProductNames);
 router.get('/:id', getProduct);
 
 // Protected routes

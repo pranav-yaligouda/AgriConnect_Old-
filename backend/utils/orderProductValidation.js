@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const productNames = require('../config/productNames');
 
 const orderSchema = Joi.object({
   items: Joi.array().items({
@@ -31,17 +32,34 @@ const productSchema = Joi.object({
   minimumOrderQuantity: Joi.number().allow(null),
 });
 
+function validateProductName(category, key) {
+  if (!productNames[category]) return false;
+  return productNames[category].some(item => item.key === key);
+}
+
 const validateOrder = (data) => {
   return orderSchema.validate(data, { abortEarly: false });
 };
 
 const validateProduct = (data) => {
-  return productSchema.validate(data, { abortEarly: false });
+  // Joi validation first
+  const joiResult = productSchema.validate(data, { abortEarly: false });
+  if (joiResult.error) return joiResult;
+  // Custom validation for product name key
+  if (!validateProductName(data.category, data.name)) {
+    return {
+      error: {
+        details: [{ message: 'Invalid product name for category', path: ['name'] }]
+      }
+    };
+  }
+  return joiResult;
 };
 
 module.exports = {
   validateOrder,
   validateProduct,
+  validateProductName,
   orderSchema,
   productSchema
 };

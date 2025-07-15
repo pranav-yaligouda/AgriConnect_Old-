@@ -1,10 +1,10 @@
 // Environment variables and configuration settings
 
 // API URLs
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Frontend URL
-export const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+export const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 
 
 // Payment settings

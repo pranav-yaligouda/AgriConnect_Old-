@@ -518,12 +518,8 @@ const ManageProducts = () => {
                     label={t('manageProducts.productName')}
                     fullWidth
                     value={selectedProduct.name}
-                    onChange={(e) =>
-                      setSelectedProduct({
-                        ...selectedProduct,
-                        name: e.target.value,
-                      })
-                    }
+                    disabled
+                    InputProps={{ readOnly: true }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -531,21 +527,17 @@ const ManageProducts = () => {
                     <InputLabel>{t('manageProducts.category')}</InputLabel>
                     <Select
                       value={selectedProduct.category}
-                      onChange={(e) =>
-                        setSelectedProduct({
-                          ...selectedProduct,
-                          category: e.target.value,
-                        })
-                      }
                       label={t('manageProducts.category')}
+                      disabled
+                      inputProps={{ readOnly: true }}
                     >
                       <MenuItem value="vegetables">{t('manageProducts.vegetables')}</MenuItem>
                       <MenuItem value="fruits">{t('manageProducts.fruits')}</MenuItem>
                       <MenuItem value="grains">{t('manageProducts.grains')}</MenuItem>
+                      <MenuItem value="pulses">{t('manageProducts.pulses')}</MenuItem>
+                      <MenuItem value="oilseeds">{t('manageProducts.oilseeds')}</MenuItem>
+                      <MenuItem value="spices">{t('manageProducts.spices')}</MenuItem>
                       <MenuItem value="dairy">{t('manageProducts.dairy')}</MenuItem>
-                      <MenuItem value="meat">{t('manageProducts.meat')}</MenuItem>
-                      <MenuItem value="poultry">{t('manageProducts.poultry')}</MenuItem>
-                      <MenuItem value="other">{t('manageProducts.other')}</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>

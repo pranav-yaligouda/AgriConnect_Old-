@@ -3,10 +3,23 @@ import { Box, Container, Grid, Typography, Tabs, Tab, Button, Snackbar, Circular
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { fetchDashboardData, addProduct, deleteProduct, fetchProducts, uploadProductImages } from "../services/apiService";
+import { fetchDashboardData, addProduct, deleteProduct, fetchProducts, uploadProductImages, fetchProductNames, ProductNameOption } from "../services/apiService";
 import ImageUpload from "../components/dashboard/ImageUpload";
 import { toast } from "react-toastify";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import AddIcon from "@mui/icons-material/Add";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import LocalShipping from "@mui/icons-material/LocalShipping";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import PersonIcon from "@mui/icons-material/Person";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import LinearProgress from "@mui/material/LinearProgress";
+import Autocomplete from '@mui/material/Autocomplete';
 
 
 // Utility function to get role-based profile placeholder
@@ -20,19 +33,6 @@ function getRoleProfilePlaceholder(role?: string): string {
       return '/images/userProfilePlaceholder.png';
   }
 }
-
-import AddIcon from "@mui/icons-material/Add";
-import InventoryIcon from "@mui/icons-material/Inventory";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import LocalShipping from "@mui/icons-material/LocalShipping";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import PersonIcon from "@mui/icons-material/Person";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import CardActions from "@mui/material/CardActions";
-import LinearProgress from "@mui/material/LinearProgress";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -119,6 +119,14 @@ interface NewProductData {
   };
 }
 
+// Helper for safe language key access
+const getProductNameLabel = (option: ProductNameOption, lang: string) => {
+  if (lang === 'en' || lang === 'hi' || lang === 'kn' || lang === 'mr') {
+    return option[lang];
+  }
+  return option.en;
+};
+
 function getProfileImageSrc(user: User | null): string {
   if (!user) return getRoleProfilePlaceholder();
   
@@ -168,6 +176,8 @@ const Dashboard = () => {
   const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
   const [uploadingProductImages, setUploadingProductImages] = useState(false);
   const [productImageError, setProductImageError] = useState<string | null>(null);
+  const [productNames, setProductNames] = useState<ProductNameOption[]>([]);
+  const { i18n } = useTranslation();
 
 
   // Fetch dashboard data only once on mount
@@ -265,6 +275,15 @@ const Dashboard = () => {
     fetchData();
   }, [navigate]);
 
+  useEffect(() => {
+    if (newProduct.category) {
+      fetchProductNames(newProduct.category)
+        .then(setProductNames)
+        .catch(() => setProductNames([]));
+    } else {
+      setProductNames([]);
+    }
+  }, [newProduct.category, i18n.language]);
 
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -976,34 +995,45 @@ const Dashboard = () => {
           <Box component="form" sx={{ mt: 2 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t('dashboard.productName')}
-                  fullWidth
-                  required
-                  value={newProduct.name}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, name: e.target.value })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel>{t('dashboard.category')}</InputLabel>
+                <FormControl fullWidth required sx={{ mb: 2 }}>
+                  <InputLabel id="category-label">{t('dashboard.category')}</InputLabel>
                   <Select
-                    label={t('dashboard.category')}
+                    labelId="category-label"
+                    id="category-select"
                     value={newProduct.category}
-                    onChange={(e) =>
-                      setNewProduct({ ...newProduct, category: e.target.value })
-                    }
+                    label={t('dashboard.category')}
+                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value, name: '' })}
                   >
+                    <MenuItem value="" disabled>{t('dashboard.selectCategory')}</MenuItem>
                     <MenuItem value="vegetables">{t('dashboard.vegetables')}</MenuItem>
                     <MenuItem value="fruits">{t('dashboard.fruits')}</MenuItem>
                     <MenuItem value="grains">{t('dashboard.grains')}</MenuItem>
+                    <MenuItem value="pulses">{t('dashboard.pulses')}</MenuItem>
+                    <MenuItem value="oilseeds">{t('dashboard.oilseeds')}</MenuItem>
+                    <MenuItem value="spices">{t('dashboard.spices')}</MenuItem>
                     <MenuItem value="dairy">{t('dashboard.dairy')}</MenuItem>
-                    <MenuItem value="meat">{t('dashboard.meat')}</MenuItem>
-                    <MenuItem value="poultry">{t('dashboard.poultry')}</MenuItem>
-                    <MenuItem value="other">{t('dashboard.other')}</MenuItem>
                   </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth required sx={{ mb: 2 }}>
+                  <Autocomplete
+                    options={productNames}
+                    getOptionLabel={(option) => getProductNameLabel(option as ProductNameOption, i18n.language as string)}
+                    value={productNames.find((p) => p.key === newProduct.name) || undefined}
+                    onChange={(e, value) => setNewProduct({ ...newProduct, name: (value as ProductNameOption | undefined)?.key || '' })}
+                    renderInput={(params) => (
+                      <TextField {...params} label={t('dashboard.productName')} required inputProps={{ ...params.inputProps, readOnly: true }} />
+                    )}
+                    disabled={!newProduct.category}
+                    renderOption={(props, option) => (
+                      <li {...props} key={option.key}>
+                        {getProductNameLabel(option as ProductNameOption, i18n.language as string)}
+                      </li>
+                    )}
+                    freeSolo={false}
+                    disableClearable
+                  />
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>

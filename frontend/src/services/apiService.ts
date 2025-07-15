@@ -226,6 +226,23 @@ export interface Product {
   };
 }
 
+export interface ProductNameOption {
+  key: string;
+  en: string;
+  hi: string;
+  kn: string;
+  mr: string;
+  [key: string]: string;
+}
+
+export async function fetchProductNames(category: string): Promise<ProductNameOption[]> {
+  try {
+    const response = await api.get(`/products/names?category=${category}`);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error: any) {
+    return [];
+  }
+}
 
 export async function fetchProducts(params?: Record<string, any>): Promise<{ products: Product[]; total: number; page: number; pageCount: number }> {
   try {
@@ -325,21 +342,33 @@ export async function resolveDispute(requestId: string, data: { adminNote: strin
 export async function adminLogin({ username, password, deviceFingerprint }: { username: string; password: string; deviceFingerprint: string }) {
   return api.post('/admin/login', { username, password, deviceFingerprint });
 }
-// Admin: fetch all users
-export async function fetchAdminUsers() {
-  return api.get('/users/admin/users');
+// Admin: fetch all users (with pagination/filter/search)
+export async function fetchAdminUsers(params?: Record<string, any>) {
+  return api.get('/admin/users', { params });
 }
-// Admin: fetch all products
-export async function fetchAdminProducts() {
-  return api.get('/users/admin/products');
+// Admin: fetch all products (with pagination/filter/search)
+export async function fetchAdminProducts(params?: Record<string, any>) {
+  return api.get('/admin/products', { params });
 }
 // Admin: fetch logs
-export async function fetchAdminLogs() {
-  return api.get('/users/admin/logs');
+export async function fetchAdminLogs(params?: Record<string, any>) {
+  return api.get('/admin/logs', { params });
 }
 // Admin: fetch settings
 export async function fetchAdminSettings() {
-  return api.get('/users/admin/settings');
+  return api.get('/admin/settings');
+}
+// Admin: create a new admin
+export async function createAdmin(data: { name: string; username: string; email: string; phone: string; password: string; address: any }) {
+  return api.post('/users/register', { ...data, role: 'admin' });
+}
+// Admin: change user role
+export async function changeUserRole(userId: string, role: string) {
+  return api.patch('/admin/users/role', { userId, role });
+}
+// Admin: update admin notes
+export async function updateAdminNotes(userId: string, adminNotes: string) {
+  return api.patch('/admin/users/admin-notes', { userId, adminNotes });
 }
 
 // ---- Utility: Robust error normalization ----

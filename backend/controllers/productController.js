@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const { validateProduct, productSchema } = require('../utils/orderProductValidation');
+const productNames = require('../config/productNames');
 
 // Create a new product
 const createProduct = async (req, res) => {
@@ -40,7 +41,8 @@ const getProducts = async (req, res) => {
       isOrganic,
       sort,
       page = 1,
-      limit = 20
+      limit = 20,
+      name
     } = req.query;
 
     const query = {};
@@ -48,6 +50,11 @@ const getProducts = async (req, res) => {
     // Category filter (supports multiple categories)
     if (category) {
       query.category = { $in: category.split(',') };
+    }
+
+    // Filter by product name key
+    if (name) {
+      query.name = name;
     }
 
     // Price range filter
@@ -274,6 +281,14 @@ function calculateAverageRating(reviews) {
   return sum / reviews.length;
 }
 
+// Add this controller to serve product names by category
+const getProductNames = (req, res) => {
+  const { category } = req.query;
+  if (!category || !productNames[category]) {
+    return res.status(400).json({ message: 'Invalid category' });
+  }
+  res.json(productNames[category]);
+};
 
 
 module.exports = {
@@ -286,4 +301,5 @@ module.exports = {
   getMyProducts,
   getCategories,
   uploadProductImages, // Export the new handler
+  getProductNames,
 }; 
