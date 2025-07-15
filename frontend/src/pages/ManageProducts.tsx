@@ -48,6 +48,7 @@ import { useNavigate } from "react-router-dom";
 import { containerPadding } from "../utils/styleUtils";
 
 import { useTranslation } from "react-i18next";
+import { uploadProductImages } from '../services/apiService';
 
 interface Product {
   _id: string;
@@ -84,6 +85,12 @@ const ManageProducts = () => {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const { t } = useTranslation();
 
+  // Add state for edit image upload
+  const [editImageFiles, setEditImageFiles] = useState<File[]>([]);
+  const [editImagePreviews, setEditImagePreviews] = useState<string[]>([]);
+  const [uploadingEditImages, setUploadingEditImages] = useState(false);
+  const [editImageError, setEditImageError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -110,6 +117,8 @@ const ManageProducts = () => {
 
   const handleEditClick = (product: Product) => {
     setSelectedProduct(product);
+    setEditImageFiles([]);
+    setEditImagePreviews(product.images || []);
     setEditDialogOpen(true);
   };
 
@@ -137,10 +146,23 @@ const ManageProducts = () => {
 
   const handleUpdateProduct = async () => {
     if (!selectedProduct) return;
-
+    setUploadingEditImages(true);
+    setEditImageError(null);
     try {
+      let imageUrls: string[] = selectedProduct.images || [];
+      if (editImageFiles.length > 0) {
+        try {
+          const uploadRes = await uploadProductImages(selectedProduct._id, editImageFiles);
+          imageUrls = uploadRes.urls ? uploadRes.urls.map((u: { url: string }) => u.url) : [];
+          if (!imageUrls.length) throw new Error('No image URLs returned');
+        } catch (err: any) {
+          setEditImageError(err.message || 'Failed to upload images');
+          toast.error(err.message || 'Failed to upload images');
+          setUploadingEditImages(false);
+          return;
+        }
+      }
       // Only send fields expected by backend, with correct types
-      // Deeply omit all fields not allowed by backend Joi schema
       const productPayload = {
         name: selectedProduct.name,
         description: selectedProduct.description,
@@ -157,7 +179,7 @@ const ManageProducts = () => {
             ? { minimumOrderQuantity: Number(selectedProduct.minimumOrderQuantity) }
             : {}),
         unit: selectedProduct.unit,
-        images: (selectedProduct.images || []).map(String),
+        images: imageUrls,
         isOrganic: Boolean(selectedProduct.isOrganic),
         harvestDate: selectedProduct.harvestDate, // ISO string is fine for Joi
         location: {
@@ -165,14 +187,17 @@ const ManageProducts = () => {
           state: selectedProduct.location.state,
         }
       };
-
       const response = await api.patch(`/products/${selectedProduct._id}`, productPayload);
       setProducts(products.map(p => p._id === selectedProduct._id ? response.data as Product : p));
       setEditDialogOpen(false);
-      toast.success("Product updated successfully");
+      setEditImageFiles([]);
+      setEditImagePreviews([]);
+      toast.success('Product updated successfully');
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error("Failed to update product");
+      setEditImageError(error.message || 'Failed to update product');
+      toast.error(error.message || 'Failed to update product');
+    } finally {
+      setUploadingEditImages(false);
     }
   };
 
@@ -649,9 +674,10 @@ const ManageProducts = () => {
                   {t('manageProducts.productImages')}
                 </Typography>
                 <ImageUpload
-                  images={selectedProduct.images}
-                  onImagesChange={(imgs) => setSelectedProduct({ ...selectedProduct, images: imgs })}
-                  uploading={uploading}
+                  images={editImagePreviews}
+                  onImagesChange={(files, previews) => { setEditImageFiles(files); setEditImagePreviews(previews); setEditImageError(null); }}
+                  uploading={uploadingEditImages}
+                  error={editImageError || undefined}
                 />
               </Grid>
             </Box>
@@ -669,10 +695,10 @@ const ManageProducts = () => {
             onClick={handleUpdateProduct}
             color="primary"
             variant="contained"
-            disabled={uploading}
-            startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : undefined}
+            disabled={uploadingEditImages}
+            startIcon={uploadingEditImages ? <CircularProgress size={20} color="inherit" /> : undefined}
           >
-            {uploading ? t('manageProducts.saving') || 'Saving...' : t('manageProducts.saveChanges')}
+            {uploadingEditImages ? t('manageProducts.saving') || 'Saving...' : t('manageProducts.saveChanges')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,6 +1,4 @@
 const Product = require('../models/Product');
-const path = require('path');
-const fs = require('fs');
 const { validateProduct, productSchema } = require('../utils/orderProductValidation');
 
 // Create a new product
@@ -97,7 +95,7 @@ const getProducts = async (req, res) => {
     // Fetch products and total count in parallel
     const [products, total] = await Promise.all([
       Product.find(query)
-        .populate('farmer', 'name email phone location profileImage')
+        .populate('farmer', 'name email phone location address profileImageUrl')
         .sort(sortOptions)
         .skip(skip)
         .limit(limitNum),
@@ -120,7 +118,7 @@ const getProducts = async (req, res) => {
 const getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate('farmer', 'name email phone location address profileImage')
+      .populate('farmer', 'name email phone location address profileImageUrl')
       .populate('reviews.user', 'name');
     
     if (!product) {
@@ -200,14 +198,6 @@ const deleteProduct = async (req, res) => {
       farmer: req.user._id
     });
     if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
-    // Delete associated images
-    product.images.forEach(image => {
-      const filename = image.split('/').pop();
-      const filePath = path.join(__dirname, '../uploads', filename);
-      fs.unlink(filePath, (err) => {
-        if (err) console.error('Error deleting file:', err);
-      });
-    });
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Error deleting product:', error);
@@ -246,6 +236,25 @@ const addReview = async (req, res) => {
   }
 };
 
+// Multer+Cloudinary product image upload handler (to be used in route)
+// Usage: router.post('/:id/images', auth, authorize('farmer'), upload.array('images', 5), uploadProductImages)
+const uploadProductImages = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No images uploaded' });
+    }
+    const imageUrls = req.files.map(file => file.path);
+    product.images.push(...imageUrls);
+    await product.save();
+    // Robust response for frontend
+    res.json({ urls: imageUrls });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading product images', error: error.message });
+  }
+};
+
 // Helper function to calculate average rating
 function calculateAverageRating(reviews) {
   if (reviews.length === 0) return 0;
@@ -263,5 +272,6 @@ module.exports = {
   deleteProduct,
   addReview,
   getMyProducts,
-  getCategories
+  getCategories,
+  uploadProductImages, // Export the new handler
 }; 

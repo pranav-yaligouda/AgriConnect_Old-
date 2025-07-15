@@ -3,7 +3,7 @@ import { Box, Container, Grid, Typography, Tabs, Tab, Button, Snackbar, Circular
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { fetchDashboardData, addProduct, deleteProduct, fetchProducts } from "../services/apiService";
+import { fetchDashboardData, addProduct, deleteProduct, fetchProducts, uploadProductImages } from "../services/apiService";
 import ImageUpload from "../components/dashboard/ImageUpload";
 import { toast } from "react-toastify";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -88,8 +88,7 @@ interface User {
     state: string;
     zipcode: string;
   };
-  profileImage: string | { data: string, contentType: string };
-  profileImages?: string[];
+  profileImageUrl?: string; // Cloudinary URL
   joinDate: string;
 }
 
@@ -122,23 +121,10 @@ interface NewProductData {
 
 function getProfileImageSrc(user: User | null): string {
   if (!user) return getRoleProfilePlaceholder();
-  const img = user.profileImage;
-
-  // Case 1: Object with base64 data
-  if (img && typeof img === "object" && "data" in img && "contentType" in img && img.data && img.contentType) {
-    return `data:${img.contentType};base64,${img.data}`;
-  }
-
-  // Case 2: String - data URL or non-placeholder URL
-  if (typeof img === "string" && img.length > 0) {
-    // Accept data URLs or any non-placeholder URLs
-    if (img.startsWith('data:image/')) {
-      return img;
-    }
-    // Exclude known placeholders
-    if (!img.includes('farmerProfilePlaceholder.png') && !img.includes('vendorProfilePlaceholder.png') && !img.includes('userProfilePlaceholder.png')) {
-      return img;
-    }
+  
+  // Use profileImageUrl if available (Cloudinary URL)
+  if (user.profileImageUrl) {
+    return user.profileImageUrl;
   }
 
   // Fallback: Placeholder
@@ -176,6 +162,12 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openProductDialog, setOpenProductDialog] = useState(false);
+
+  // Add state for product image upload
+  const [productImageFiles, setProductImageFiles] = useState<File[]>([]);
+  const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
+  const [uploadingProductImages, setUploadingProductImages] = useState(false);
+  const [productImageError, setProductImageError] = useState<string | null>(null);
 
 
   // Fetch dashboard data only once on mount
@@ -288,19 +280,18 @@ const Dashboard = () => {
       if (!newProduct.description) missingFields.push(t('dashboard.description'));
       if (!newProduct.price) missingFields.push(t('dashboard.price'));
       if (!newProduct.category) missingFields.push(t('dashboard.category'));
-      if (!newProduct.availableQuantity)
-        missingFields.push(t('dashboard.availableQuantity'));
+      if (!newProduct.availableQuantity) missingFields.push(t('dashboard.availableQuantity'));
       if (!newProduct.unit) missingFields.push(t('dashboard.unit'));
       if (!newProduct.location.district) missingFields.push(t('dashboard.district'));
       if (!newProduct.location.state) missingFields.push(t('dashboard.state'));
-      if (newProduct.images.length === 0) missingFields.push(t('dashboard.images'));
-
-
+      if (productImageFiles.length === 0) missingFields.push(t('dashboard.images'));
       if (missingFields.length > 0) {
         toast.error(t('dashboard.missingFields', { fields: missingFields.join(', ') }));
         return;
       }
-
+      setUploadingProductImages(true);
+      setProductImageError(null);
+      // 1. Create product without images
       const productData = {
         name: newProduct.name,
         description: newProduct.description,
@@ -308,7 +299,7 @@ const Dashboard = () => {
         category: newProduct.category,
         availableQuantity: parseFloat(newProduct.availableQuantity),
         unit: newProduct.unit,
-        images: newProduct.images,
+        images: [],
         harvestDate: newProduct.harvestDate,
         isOrganic: newProduct.isOrganic,
         location: {
@@ -316,12 +307,53 @@ const Dashboard = () => {
           state: newProduct.location.state,
         },
       };
-
-      await submitProduct(productData);
+      let createdProduct;
+      try {
+        createdProduct = await addProduct(productData);
     } catch (err: any) {
-      console.error("Error adding product:", err);
+        setProductImageError(err.message || 'Failed to create product');
+        toast.error(err.message || 'Failed to create product');
+        setUploadingProductImages(false);
+        return;
+      }
+      // 2. If images selected, upload to /api/products/:id/images
+      let imageUrls: string[] = [];
+      if (productImageFiles.length > 0) {
+        try {
+          const uploadRes = await uploadProductImages(createdProduct._id, productImageFiles);
+          imageUrls = uploadRes.urls ? uploadRes.urls.map((u: { url: string }) => u.url) : [];
+          if (!imageUrls.length) throw new Error('No image URLs returned');
+        } catch (err: any) {
+          setProductImageError(err.message || 'Failed to upload images');
+          toast.error(err.message || 'Failed to upload images');
+          setUploadingProductImages(false);
+          return;
+        }
+      }
+      setUploadingProductImages(false);
+      // 3. Update product in state with returned image URLs
+      const finalProduct = { ...createdProduct, images: imageUrls };
+      setProducts([...products, finalProduct]);
+      setOpenProductDialog(false);
+      setNewProduct({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        stock: '',
+        unit: 'kg',
+        images: [],
+        harvestDate: new Date().toISOString().split('T')[0],
+        isOrganic: false,
+        location: { district: '', state: '' },
+        availableQuantity: '',
+      });
+      setProductImageFiles([]);
+      setProductImagePreviews([]);
+      toast.success(t('dashboard.productAddedSuccess'));
+    } catch (err: any) {
+      console.error('Error adding product:', err);
       toast.error(t('dashboard.productAddFail'));
-
     }
   };
 
@@ -874,7 +906,7 @@ const Dashboard = () => {
         <Grid item xs={12} md={4}>
           <Box sx={{ p: 3, borderRadius: 2, bgcolor: 'primary.main', color: 'white', display: 'flex', alignItems: 'center', gap: 2, boxShadow: 2 }}>
             <Avatar
-              src={getProfileImageSrc(user)}
+              src={user?.profileImageUrl || getRoleProfilePlaceholder(user?.role)}
               alt={user?.name || "Profile"}
               sx={{
                 width: 56,
@@ -1115,9 +1147,10 @@ const Dashboard = () => {
                   {t('dashboard.productImages')}
                 </Typography>
                 <ImageUpload
-                  images={newProduct.images}
-                  onImagesChange={(imgs) => setNewProduct({ ...newProduct, images: imgs })}
-                  uploading={uploading}
+                  images={productImagePreviews}
+                  onImagesChange={(files, previews) => { setProductImageFiles(files); setProductImagePreviews(previews); setProductImageError(null); }}
+                  uploading={uploadingProductImages}
+                  error={productImageError || undefined}
                 />
               </Grid>
             </Grid>

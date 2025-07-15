@@ -7,8 +7,47 @@ const cors = require('cors');
 const http = require('http');
 const path = require('path');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+
+// Import basic security middleware (simplified for now)
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+
+// Basic error handling
+const errorHandler = (err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+};
+
+const notFoundHandler = (req, res) => {
+  res.status(404).json({ message: 'API route not found.' });
+};
+
+// Basic health check
+const healthCheck = (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    uptime: process.uptime(), 
+    timestamp: Date.now() 
+  });
+};
+
+// Basic monitoring
+const requestMonitor = (req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (duration > 5000) {
+      console.warn(`[PERFORMANCE] Slow request: ${req.method} ${req.url} took ${duration}ms`);
+    }
+  });
+  next();
+};
 // const bodyParser = require('body-parser'); // Express 4.16+ has built-in body parsing
 const app = express();
 const server = http.createServer(app);
@@ -22,30 +61,44 @@ const mongoUri = config.get('MONGODB_URI');
 const isDev = config.get('NODE_ENV') === 'development';
 
 
-// Security: Set HTTP headers
-app.use(
-  helmet({
-    crossOriginResourcePolicy: false, // Disable to allow cross-origin images
-  })
-);
+// Advanced security middleware
+app.use(helmet({
+  crossOriginResourcePolicy: false, // Disable to allow cross-origin images
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://api.cloudinary.com"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
+    }
+  }
+}));
 
 // Logging
 app.use(morgan(isDev ? 'dev' : 'combined'));
 
-//Rate limiting configuration
+// Basic rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: config.getAsNumber('RATE_LIMIT_MAX') || (config.get('NODE_ENV') === 'development' ? 10000 : 100),
-  handler: (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.status(429).json({ message: 'Too many requests, please try again later.' });
-  }
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes'
 });
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') return next();
-  limiter(req, res, next);
-});
+
+// Performance monitoring
+app.use(requestMonitor);
+
+// Input sanitization and validation
+// app.use(mongoSanitize()); // Temporarily disabled due to Express 5.x compatibility
+app.use(xss()); // Prevent XSS attacks
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+
+// Rate limiting
+app.use('/api', limiter);
 
 // CORS configuration
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim());
@@ -106,39 +159,19 @@ const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.use('/api/admin', adminRoutes);
-
-// Health check endpoint (for Render, AWS, etc.)
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: Date.now() });
-});
+// Health check endpoint
+app.get('/health', healthCheck);
 
 const contactRequestRoutes = require('./routes/contactRequestRoutes');
 app.use('/api/contact-requests', contactRequestRoutes);
 
 
 
-// 404 handler for unknown API routes (Express 5.x compatible)
-app.all(/^\/api(\/|$)/, (req, res) => {
-  res.status(404).json({ message: 'API route not found.' });
-});
+// 404 handler for unknown API routes
+app.all(/^\/api(\/|$)/, notFoundHandler);
 
-
-
-// Error handling middleware
-// IMPORTANT: Do NOT override CORS headers for static/image requests
-app.use((err, req, res, next) => {
-  // Only add CORS header if not already sent and not for static/image requests
-  if (req.originalUrl.startsWith('/uploads') && !res.headersSent) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Vary', 'Origin');
-  }
-  console.error(err.stack);
-  res.status(500).json({
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
 // Database connection
 const connectDB = async () => {
