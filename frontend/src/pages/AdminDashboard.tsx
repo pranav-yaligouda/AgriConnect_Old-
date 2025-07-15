@@ -306,6 +306,12 @@ const AdminDashboard: React.FC = () => {
                           <Typography variant="body2">Status: {cr.status}</Typography>
                           <Typography variant="body2">Requested Quantity: {cr.requestedQuantity}</Typography>
                           <Typography variant="body2">Requested At: {cr.requestedAt ? new Date(cr.requestedAt).toLocaleString() : '-'}</Typography>
+                          <Typography variant="body2">User Confirmed: {cr.userConfirmed ? 'Yes' : 'No'}</Typography>
+                          <Typography variant="body2">Farmer Confirmed: {cr.farmerConfirmed ? 'Yes' : 'No'}</Typography>
+                          <Typography variant="body2">Final Quantity (User): {cr.finalQuantity !== undefined ? cr.finalQuantity : '-'}</Typography>
+                          <Typography variant="body2">Final Price (User): {cr.finalPrice !== undefined ? cr.finalPrice : '-'}</Typography>
+                          <Typography variant="body2">Final Quantity (Farmer): {cr.farmerFinalQuantity !== undefined ? cr.farmerFinalQuantity : '-'}</Typography>
+                          <Typography variant="body2">Final Price (Farmer): {cr.farmerFinalPrice !== undefined ? cr.farmerFinalPrice : '-'}</Typography>
                         </Paper>
                       ))}
                     </Box>
