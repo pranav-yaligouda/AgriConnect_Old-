@@ -226,6 +226,23 @@ export interface Product {
   };
 }
 
+export interface ProductNameOption {
+  key: string;
+  en: string;
+  hi: string;
+  kn: string;
+  mr: string;
+  [key: string]: string;
+}
+
+export async function fetchProductNames(category: string): Promise<ProductNameOption[]> {
+  try {
+    const response = await api.get(`/products/names?category=${category}`);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error: any) {
+    return [];
+  }
+}
 
 export async function fetchProducts(params?: Record<string, any>): Promise<{ products: Product[]; total: number; page: number; pageCount: number }> {
   try {
