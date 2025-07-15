@@ -12,7 +12,6 @@ const morgan = require('morgan');
 // Import basic security middleware (simplified for now)
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
 const hpp = require('hpp');
 
 // Basic error handling
@@ -94,7 +93,7 @@ app.use(requestMonitor);
 
 // Input sanitization and validation
 // app.use(mongoSanitize()); // Temporarily disabled due to Express 5.x compatibility
-app.use(xss()); // Prevent XSS attacks
+// app.use(xss()); // Removed due to incompatibility with Express 4.18+
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
 // Rate limiting

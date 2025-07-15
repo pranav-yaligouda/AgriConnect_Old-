@@ -45,7 +45,10 @@ const register = async (req, res) => {
     }
 
     // Check if user already exists by phone
-    const existingUser = await User.findOne({ phone });
+    if (typeof phone !== 'string') {
+      return res.status(400).json({ message: 'Invalid phone' });
+    }
+    const existingUser = await User.findOne({ phone: { $eq: phone } });
     if (existingUser) {
       return res.status(400).json({
         message: 'User already exists',
@@ -57,7 +60,10 @@ const register = async (req, res) => {
 
     // Optionally, check for duplicate email only if provided
     if (email) {
-      const emailUser = await User.findOne({ email });
+      if (typeof email !== 'string') {
+        return res.status(400).json({ message: 'Invalid email' });
+      }
+      const emailUser = await User.findOne({ email: { $eq: email } });
       if (emailUser) {
         return res.status(400).json({
           message: 'User already exists',
@@ -165,7 +171,12 @@ const login = async (req, res) => {
     }
 
     // Find user
-    const user = await User.findOne(email ? { email } : { phone });
+    if (typeof email !== 'string' && typeof phone !== 'string') {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+    const user = await User.findOne(
+      email ? { email: { $eq: email } } : { phone: { $eq: phone } }
+    );
     if (!user) {
       return res.status(401).json({
         message: 'Invalid credentials',
@@ -232,7 +243,10 @@ const resetPassword = async (req, res) => {
     // 2. Hash and update password in your User model
     const bcrypt = require('bcryptjs');
     const hash = await bcrypt.hash(newPassword, 10);
-    await User.updateOne({ phone }, { password: hash });
+    if (typeof phone !== 'string') {
+      return res.status(400).json({ message: 'Invalid phone' });
+    }
+    await User.updateOne({ phone: { $eq: phone } }, { password: hash });
 
     return res.json({ success: true });
   } catch (err) {
@@ -244,10 +258,10 @@ const resetPassword = async (req, res) => {
 exports.checkPhone = async (req, res) => {
   try {
     const { phone } = req.body;
-    if (!phone) {
-      return res.status(400).json({ exists: false, message: "Phone number is required" });
+    if (!phone || typeof phone !== 'string') {
+      return res.status(400).json({ exists: false, message: "Phone number is required and must be a string" });
     }
-    const user = await require('../models/User').findOne({ phone });
+    const user = await require('../models/User').findOne({ phone: { $eq: phone } });
     res.json({ exists: !!user });
   } catch (error) {
     res.status(500).json({ exists: false, message: error.message });
@@ -391,10 +405,10 @@ const deleteAccount = async (req, res) => {
 const checkPhone = async (req, res) => {
   try {
     const { phone } = req.body;
-    if (!phone) {
-      return res.status(400).json({ exists: false, message: "Phone number is required" });
+    if (!phone || typeof phone !== 'string') {
+      return res.status(400).json({ exists: false, message: "Phone number is required and must be a string" });
     }
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone: { $eq: phone } });
     res.json({ exists: !!user });
   } catch (error) {
     res.status(500).json({ exists: false, message: error.message });

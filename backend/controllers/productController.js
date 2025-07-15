@@ -117,7 +117,11 @@ const getProducts = async (req, res) => {
 // Get a single product
 const getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const { id } = req.params;
+    if (typeof id !== 'string') {
+      return res.status(400).json({ message: 'Invalid product id' });
+    }
+    const product = await Product.findOne({ _id: { $eq: id } })
       .populate('farmer', 'name email phone location address profileImageUrl')
       .populate('reviews.user', 'name');
     
@@ -166,8 +170,12 @@ const getMyProducts = async (req, res) => {
 // Update a product
 const updateProduct = async (req, res) => {
   try {
+    const { id } = req.params;
+    if (typeof id !== 'string') {
+      return res.status(400).json({ message: 'Invalid product id' });
+    }
     const product = await Product.findOne({
-      _id: req.params.id,
+      _id: { $eq: id },
       farmer: req.user._id
     });
     if (!product) {
@@ -193,15 +201,19 @@ const updateProduct = async (req, res) => {
 // Delete a product
 const deleteProduct = async (req, res) => {
   try {
+    const { id } = req.params;
+    if (typeof id !== 'string') {
+      return res.status(400).json({ message: 'Invalid product id' });
+    }
     const product = await Product.findOneAndDelete({
-      _id: req.params.id,
+      _id: { $eq: id },
       farmer: req.user._id
     });
     if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
-    res.json({ message: 'Product deleted successfully' });
+    res.json({ message: 'Product deleted' });
   } catch (error) {
     console.error('Error deleting product:', error);
-    res.status(500).json({ message: 'Error deleting product', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+    res.status(500).json({ message: 'Error deleting product', error: error.message });
   }
 };
 
