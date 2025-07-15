@@ -370,6 +370,10 @@ export async function changeUserRole(userId: string, role: string) {
 export async function updateAdminNotes(userId: string, adminNotes: string) {
   return api.patch('/admin/users/admin-notes', { userId, adminNotes });
 }
+// Admin: fetch all contact requests (with pagination/filter/search)
+export async function fetchAdminContactRequests(params?: Record<string, any>) {
+  return api.get('/admin/contact-requests', { params });
+}
 
 // ---- Utility: Robust error normalization ----
 function normalizeApiError(error: any) {

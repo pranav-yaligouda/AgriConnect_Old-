@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Tabs, Tab, Paper, CircularProgress, AppBar, Toolbar, IconButton, Button, TextField, InputAdornment, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Select } from '@mui/material';
-import { fetchAdminUsers, fetchAdminProducts, fetchAdminLogs, fetchAdminSettings, createAdmin, changeUserRole, updateAdminNotes } from '../services/apiService';
+import { fetchAdminUsers, fetchAdminProducts, fetchAdminLogs, fetchAdminSettings, createAdmin, changeUserRole, updateAdminNotes, fetchAdminContactRequests } from '../services/apiService';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import { toast } from 'react-toastify';
 
-const tabLabels = ['Users', 'Products', 'Logs', 'Settings'];
+const tabLabels = ['Users', 'Products', 'Contact Requests', 'Logs', 'Settings'];
 const roleOptions = ['user', 'farmer', 'vendor', 'admin'];
 
 function CreateAdminDialog({ open, onClose, onCreated }) {
@@ -82,6 +82,12 @@ const AdminDashboard: React.FC = () => {
   const [editRoleUser, setEditRoleUser] = useState<any>(null);
   const [editRole, setEditRole] = useState('');
   const [editRoleLoading, setEditRoleLoading] = useState(false);
+  const [contactRequests, setContactRequests] = useState<any[]>([]);
+  const [contactRequestPage, setContactRequestPage] = useState(1);
+  const [contactRequestLimit, setContactRequestLimit] = useState(10);
+  const [contactRequestSearch, setContactRequestSearch] = useState('');
+  const [contactRequestStatus, setContactRequestStatus] = useState('');
+  const [contactRequestTotal, setContactRequestTotal] = useState(0);
   const navigate = useNavigate();
 
   const refreshUsers = async () => {
@@ -110,6 +116,19 @@ const AdminDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+  const refreshContactRequests = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetchAdminContactRequests({ page: contactRequestPage, limit: contactRequestLimit, search: contactRequestSearch, status: contactRequestStatus });
+      setContactRequests(res.data?.requests || res.requests || []);
+      setContactRequestTotal(res.data?.total || res.total || 0);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err.message || 'Failed to fetch contact requests');
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     setError('');
     setLoading(true);
@@ -120,9 +139,11 @@ const AdminDashboard: React.FC = () => {
         } else if (tab === 1) {
           await refreshProducts();
         } else if (tab === 2) {
+          await refreshContactRequests();
+        } else if (tab === 3) {
           const res = await fetchAdminLogs();
           setLogs(res.data?.logs || res.logs || []);
-        } else if (tab === 3) {
+        } else if (tab === 4) {
           const res = await fetchAdminSettings();
           setSettings(res.data || {});
         }
@@ -134,11 +155,12 @@ const AdminDashboard: React.FC = () => {
     };
     fetchData();
     // eslint-disable-next-line
-  }, [tab, userPage, userLimit, userSearch, userRoleFilter, productPage, productLimit, productSearch]);
+  }, [tab, userPage, userLimit, userSearch, userRoleFilter, productPage, productLimit, productSearch, contactRequestPage, contactRequestLimit, contactRequestSearch, contactRequestStatus]);
 
   // Pagination helpers
   const userPageCount = Math.ceil(userTotal / userLimit);
   const productPageCount = Math.ceil(productTotal / productLimit);
+  const contactRequestPageCount = Math.ceil(contactRequestTotal / contactRequestLimit);
 
   // Handlers for admin notes
   const handleEditNotes = (user: any) => {
@@ -261,6 +283,42 @@ const AdminDashboard: React.FC = () => {
               )}
               {tab === 2 && (
                 <Box>
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+                    <TextField placeholder="Search contact requests..." value={contactRequestSearch} onChange={e => setContactRequestSearch(e.target.value)} size="small" InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
+                    <Select value={contactRequestStatus} onChange={e => setContactRequestStatus(e.target.value)} displayEmpty size="small" sx={{ minWidth: 140 }}>
+                      <MenuItem value="">All Statuses</MenuItem>
+                      <MenuItem value="pending">Pending</MenuItem>
+                      <MenuItem value="accepted">Accepted</MenuItem>
+                      <MenuItem value="completed">Completed</MenuItem>
+                      <MenuItem value="disputed">Disputed</MenuItem>
+                      <MenuItem value="expired">Expired</MenuItem>
+                      <MenuItem value="rejected">Rejected</MenuItem>
+                    </Select>
+                  </Box>
+                  <Typography variant="h6" mb={2}>All Contact Requests</Typography>
+                  {contactRequests.length === 0 ? <Typography>No contact requests found.</Typography> : (
+                    <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                      {contactRequests.map((cr: any) => (
+                        <Paper key={cr._id} sx={{ p: 2, mb: 1, borderRadius: 2 }}>
+                          <Typography fontWeight="bold">Product: {cr.productId?.name || '-'}</Typography>
+                          <Typography variant="body2">Requester: {cr.requesterId?.name || '-'} ({cr.requesterId?.role || '-'})</Typography>
+                          <Typography variant="body2">Farmer: {cr.farmerId?.name || '-'} ({cr.farmerId?.role || '-'})</Typography>
+                          <Typography variant="body2">Status: {cr.status}</Typography>
+                          <Typography variant="body2">Requested Quantity: {cr.requestedQuantity}</Typography>
+                          <Typography variant="body2">Requested At: {cr.requestedAt ? new Date(cr.requestedAt).toLocaleString() : '-'}</Typography>
+                        </Paper>
+                      ))}
+                    </Box>
+                  )}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                    <Button disabled={contactRequestPage <= 1} onClick={() => setContactRequestPage(p => p - 1)}>Prev</Button>
+                    <Typography>Page {contactRequestPage} of {contactRequestPageCount || 1}</Typography>
+                    <Button disabled={contactRequestPage >= contactRequestPageCount} onClick={() => setContactRequestPage(p => p + 1)}>Next</Button>
+                  </Box>
+                </Box>
+              )}
+              {tab === 3 && (
+                <Box>
                   <Typography variant="h6" mb={2}>Activity Logs</Typography>
                   {logs.length === 0 ? <Typography>No logs found.</Typography> : (
                     <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
@@ -277,7 +335,7 @@ const AdminDashboard: React.FC = () => {
                   )}
                 </Box>
               )}
-              {tab === 3 && (
+              {tab === 4 && (
                 <Box>
                   <Typography variant="h6" mb={2}>Settings</Typography>
                   <pre style={{ fontSize: 14, background: '#f8f8f8', padding: 8, borderRadius: 4 }}>{JSON.stringify(settings, null, 2)}</pre>

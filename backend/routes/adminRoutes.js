@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { auth, authorize } = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
+const contactRequestController = require('../controllers/contactRequestController');
 const { adminSchemas, validate, validateQuery } = require('../utils/validation');
 const rateLimit = require('express-rate-limit');
 const Joi = require('joi');
@@ -25,6 +26,7 @@ router.post('/login', adminLoginLimiter, validate(adminSchemas.login), adminCont
 // Admin dashboard APIs
 router.get('/users', auth, authorize('admin'), adminController.getAllUsers);
 router.get('/products', auth, authorize('admin'), adminController.getAllProducts);
+router.get('/contact-requests', auth, authorize('admin'), contactRequestController.getAllContactRequests);
 
 router.patch('/users/role', auth, authorize('admin'), validate(adminSchemas.changeUserRole), adminController.changeUserRole);
 router.patch('/users/admin-notes', auth, authorize('admin'), validate(updateAdminNotesSchema), adminController.updateAdminNotes);
