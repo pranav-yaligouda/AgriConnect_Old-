@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Container, useMediaQuery, useTheme } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
+
 import { fetchProducts, fetchCategories } from "../services/apiService";
 import type { Product, PaginatedProducts } from '../types/api';
+
 import { useTranslation } from "react-i18next";
 import { useNotification } from '../contexts/NotificationContext';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -16,15 +18,18 @@ import MarketplaceProductGrid from '../components/marketplace/MarketplaceProduct
 import MarketplaceEmptyState from '../components/marketplace/MarketplaceEmptyState';
 import MarketplacePagination from '../components/marketplace/MarketplacePagination';
 
+
 const Marketplace: React.FC = () => {
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const { t } = useTranslation('marketplace');
   const { notify } = useNotification();
-
+  
   // State
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [selectedDistrict, setSelectedDistrict] = useState("");
@@ -33,6 +38,7 @@ const Marketplace: React.FC = () => {
   const [organicOnly, setOrganicOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = isTablet ? 6 : 12;
+
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // Debounce search
@@ -43,16 +49,19 @@ const Marketplace: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
+
   // Fetch categories
   const {
     data: categoriesRaw,
     isLoading: categoriesLoading,
     error: categoriesError
   } = useQuery<string[], Error>({
+
     queryKey: ['categories'],
     queryFn: fetchCategories,
     staleTime: 10 * 60 * 1000
   });
+
   const categories: string[] = Array.isArray(categoriesRaw) ? categoriesRaw : [];
 
   // Fetch products
@@ -61,6 +70,7 @@ const Marketplace: React.FC = () => {
     isLoading: productsLoading,
     error: productsError
   } = useQuery<PaginatedProducts, Error>({
+
     queryKey: [
       'products',
       debouncedSearchQuery,
@@ -75,11 +85,13 @@ const Marketplace: React.FC = () => {
           search: debouncedSearchQuery,
       category: selectedCategories.includes('all') || selectedCategories.length === 0 ? undefined : selectedCategories.join(','),
           district: selectedDistrict,
+
       ...(organicOnly ? { isOrganic: true } : {}),
           sort: sortBy,
           page: currentPage,
       limit: productsPerPage,
     }),
+
     staleTime: 60 * 1000
   });
   const productsData: PaginatedProducts = productsDataRaw && Array.isArray(productsDataRaw.products)
@@ -96,6 +108,7 @@ const Marketplace: React.FC = () => {
   const products: Product[] = productsData.products;
   const totalProducts: number = productsData.total;
   const pageCount: number = productsData.pageCount;
+
 
   // Unique districts from products
   const uniqueDistricts: string[] = Array.from(

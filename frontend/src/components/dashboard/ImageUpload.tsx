@@ -12,6 +12,7 @@ interface ImageUploadProps {
   error?: string;
 }
 
+
 const PRODUCT_RESIZE_CONFIG = {
   quality: 0.9,
   maxWidth: 1200,
@@ -44,7 +45,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ images, onImagesChange, uploa
           lastModified: Date.now(),
         });
         resizedFiles.push(resizedFile);
-        previewUrls.push(URL.createObjectURL(resizedFile));
+        previewUrls.push(URL.createObjectURL(resizedFile))
       } catch (err) {
         setLocalError('Failed to resize image.');
         notify('Failed to resize image.', 'error');
