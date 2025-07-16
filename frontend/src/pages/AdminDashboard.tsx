@@ -5,15 +5,21 @@ import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import { toast } from 'react-toastify';
+import { useAuth } from '../hooks/useAuth';
 
 const tabLabels = ['Users', 'Products', 'Contact Requests', 'Logs', 'Settings'];
 const roleOptions = ['user', 'farmer', 'vendor', 'admin'];
 
-function CreateAdminDialog({ open, onClose, onCreated }) {
+interface CreateAdminDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}
+function CreateAdminDialog({ open, onClose, onCreated }: CreateAdminDialogProps) {
   const [form, setForm] = useState({ name: '', username: '', email: '', phone: '', password: '', address: { street: '', district: '', state: '', zipcode: '' } });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name.startsWith('address.')) {
       setForm(f => ({ ...f, address: { ...f.address, [name.split('.')[1]]: value } }));
@@ -29,8 +35,8 @@ function CreateAdminDialog({ open, onClose, onCreated }) {
       toast.success('Admin created successfully!');
       onCreated();
       onClose();
-    } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to create admin');
+    } catch (err: any) {
+      setError((err?.response?.data?.message as string) || err.message || 'Failed to create admin');
     } finally {
       setLoading(false);
     }
@@ -59,6 +65,9 @@ function CreateAdminDialog({ open, onClose, onCreated }) {
 }
 
 const AdminDashboard: React.FC = () => {
+  const auth = useAuth();
+  const user = auth?.user;
+  const refreshUser = auth?.refreshUser;
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -90,15 +99,22 @@ const AdminDashboard: React.FC = () => {
   const [contactRequestTotal, setContactRequestTotal] = useState(0);
   const navigate = useNavigate();
 
+  // Only allow admin users
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   const refreshUsers = async () => {
     setLoading(true);
     setError('');
     try {
       const res = await fetchAdminUsers({ page: userPage, limit: userLimit, search: userSearch, role: userRoleFilter });
-      setUsers(res.data?.users || res.users || []);
-      setUserTotal(res.data?.total || res.total || 0);
+      setUsers(res.data?.users || []);
+      setUserTotal(res.data?.total || 0);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Failed to fetch users');
+      setError((err?.response?.data?.message as string) || err.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
     }
@@ -108,10 +124,10 @@ const AdminDashboard: React.FC = () => {
     setError('');
     try {
       const res = await fetchAdminProducts({ page: productPage, limit: productLimit, search: productSearch });
-      setProducts(res.data?.products || res.products || []);
-      setProductTotal(res.data?.total || res.total || 0);
+      setProducts(res.data?.products || []);
+      setProductTotal(res.data?.total || 0);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Failed to fetch products');
+      setError((err?.response?.data?.message as string) || err.message || 'Failed to fetch products');
     } finally {
       setLoading(false);
     }
@@ -121,10 +137,10 @@ const AdminDashboard: React.FC = () => {
     setError('');
     try {
       const res = await fetchAdminContactRequests({ page: contactRequestPage, limit: contactRequestLimit, search: contactRequestSearch, status: contactRequestStatus });
-      setContactRequests(res.data?.requests || res.requests || []);
-      setContactRequestTotal(res.data?.total || res.total || 0);
+      setContactRequests(res.data?.requests || []);
+      setContactRequestTotal(res.data?.total || 0);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Failed to fetch contact requests');
+      setError((err?.response?.data?.message as string) || err.message || 'Failed to fetch contact requests');
     } finally {
       setLoading(false);
     }
@@ -142,7 +158,7 @@ const AdminDashboard: React.FC = () => {
           await refreshContactRequests();
         } else if (tab === 3) {
           const res = await fetchAdminLogs();
-          setLogs(res.data?.logs || res.logs || []);
+          setLogs(res.data?.logs || []);
         } else if (tab === 4) {
           const res = await fetchAdminSettings();
           setSettings(res.data || {});
@@ -237,9 +253,9 @@ const AdminDashboard: React.FC = () => {
                       {users.map((u: any) => (
                         <Paper key={u._id} sx={{ p: 2, mb: 1, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Box>
-                            <Typography fontWeight="bold">{u.name} ({u.role})</Typography>
-                            <Typography variant="body2">Email: {u.email}</Typography>
-                            <Typography variant="body2">Phone: {u.phone}</Typography>
+                          <Typography fontWeight="bold">{u.name} ({u.role})</Typography>
+                          <Typography variant="body2">Email: {u.email}</Typography>
+                          <Typography variant="body2">Phone: {u.phone}</Typography>
                             <Typography variant="body2">Admin Notes: {u.adminNotes || '-'} <Button size="small" onClick={() => handleEditNotes(u)}>Edit</Button></Typography>
                           </Box>
                           <Box>

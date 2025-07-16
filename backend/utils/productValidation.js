@@ -1,20 +1,6 @@
 const Joi = require('joi');
 const productNames = require('../config/productNames');
 
-const orderSchema = Joi.object({
-  items: Joi.array().items({
-    product: Joi.string().required(),
-    quantity: Joi.number().min(1).required()
-  }).min(1).required(),
-  deliveryAddress: Joi.object({
-    street: Joi.string(),
-    district: Joi.string().required(),
-    state: Joi.string().required(),
-    zipcode: Joi.string()
-  }).required(),
-  paymentMethod: Joi.string().valid('cod', 'online').required()
-});
-
 const productSchema = Joi.object({
   name: Joi.string().required(),
   description: Joi.string().required(),
@@ -37,10 +23,6 @@ function validateProductName(category, key) {
   return productNames[category].some(item => item.key === key);
 }
 
-const validateOrder = (data) => {
-  return orderSchema.validate(data, { abortEarly: false });
-};
-
 const validateProduct = (data) => {
   // Joi validation first
   const joiResult = productSchema.validate(data, { abortEarly: false });
@@ -57,9 +39,7 @@ const validateProduct = (data) => {
 };
 
 module.exports = {
-  validateOrder,
   validateProduct,
   validateProductName,
-  orderSchema,
   productSchema
 };

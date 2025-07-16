@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Core components (static imports)
 import Navbar from './components/layout/Navbar';
@@ -11,6 +13,7 @@ import Footer from './components/layout/Footer';
 import Home from './pages/Home';
 import PrivateRoute from './components/PrivateRoute';
 import LoadingSpinner from './components/LoadingSpinner';
+import RoleBasedDashboardRoute from './components/RoleBasedDashboardRoute';
 
 // Lazy-loaded components
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -64,109 +67,111 @@ const theme = createTheme({
   breakpoints: { values: { xs: 0, sm: 600, md: 960, lg: 1280, xl: 1536 } }
 });
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <NotificationProvider>
-          <SocketProvider token={null}>
-            <Router>
-              <div className="app">
-                <Navbar />
-                <main className="main-content">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <NotificationProvider>
+              <SocketProvider token={null}>
+                <Router>
+                  <div className="app">
+                    <Navbar />
+                    <main className="main-content">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
 
-                    <Route path="/marketplace" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <Marketplace />
-                      </Suspense>
-                    }/>
+                        <Route path="/marketplace" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Marketplace />
+                          </Suspense>
+                        }/>
 
-                    <Route path="/products/:id" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <ProductDetails />
-                      </Suspense>
-                    }/>
+                        <Route path="/products/:id" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ProductDetails />
+                          </Suspense>
+                        }/>
 
-                    <Route element={<PrivateRoute />}>
-                      <Route path="/profile" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <Profile />
-                        </Suspense>
-                      }/>
-                      <Route path="/dashboard" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <Dashboard />
-                        </Suspense>
-                      }/>
-                      <Route path="/my-products" element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ManageProducts />
-                        </Suspense>
-                      }/>
-                    </Route>
+                        <Route element={<PrivateRoute />}>
+                          <Route path="/profile" element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <Profile />
+                            </Suspense>
+                          }/>
+                          <Route path="/dashboard" element={<RoleBasedDashboardRoute />} />
+                          <Route path="/my-products" element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ManageProducts />
+                            </Suspense>
+                          }/>
+                        </Route>
 
-                    <Route path="/login" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <Login />
-                      </Suspense>
-                    }/>
+                        <Route path="/login" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Login />
+                          </Suspense>
+                        }/>
 
-                    <Route path="/register" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <Register />
-                      </Suspense>
-                    }/>
+                        <Route path="/register" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Register />
+                          </Suspense>
+                        }/>
 
-                    <Route path="/about" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <About />
-                      </Suspense>
-                    }/>
+                        <Route path="/about" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <About />
+                          </Suspense>
+                        }/>
 
-                    <Route path="/contact" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <Contact />
-                      </Suspense>
-                    }/>
+                        <Route path="/contact" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Contact />
+                          </Suspense>
+                        }/>
 
-                    <Route path="/faq" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <FAQ />
-                      </Suspense>
-                    }/>
+                        <Route path="/faq" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <FAQ />
+                          </Suspense>
+                        }/>
 
-                    <Route path="/admin" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                        <Route path="/admin" element={<AdminLogin />} />
+                        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-                    <Route path="*" element={
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <ErrorPage />
-                      </Suspense>
-                    }/>
-                  </Routes>
-                </main>
-                <Footer />
-                <NotificationWidget />
-              </div>
-            </Router>
-            <ToastContainer 
-              position="bottom-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-          </SocketProvider>
-        </NotificationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+                        <Route path="*" element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ErrorPage />
+                          </Suspense>
+                        }/>
+                      </Routes>
+                    </main>
+                    <Footer />
+                    <NotificationWidget />
+                  </div>
+                </Router>
+                <ToastContainer 
+                  position="bottom-right"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                />
+              </SocketProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -5,20 +5,24 @@ const jwt = require('jsonwebtoken');
 const { logAdminAction } = require('../utils/adminAudit');
 const { adminSchemas } = require('../utils/validation');
 const AdminActionLog = require('../models/AdminActionLog');
+const mongoose = require('mongoose');
+const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const VALID_ROLES = ['user', 'farmer', 'vendor', 'admin'];
+const VALID_STATUSES = ['pending', 'accepted', 'completed', 'disputed', 'expired', 'rejected'];
 
 // List all users (admin only) with pagination, filtering, and search
 async function getAllUsers(req, res) {
   const { page = 1, limit = 20, search, role } = req.query;
   const query = {};
   if (role && VALID_ROLES.includes(role)) query.role = role;
-  if (search) {
+  if (search && typeof search === 'string' && search.length < 100) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { username: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
-      { phone: { $regex: search, $options: 'i' } }
+      { name: { $regex: safeSearch, $options: 'i' } },
+      { username: { $regex: safeSearch, $options: 'i' } },
+      { email: { $regex: safeSearch, $options: 'i' } },
+      { phone: { $regex: safeSearch, $options: 'i' } }
     ];
   }
   const users = await User.find(query)
@@ -33,11 +37,12 @@ async function getAllUsers(req, res) {
 async function getAllProducts(req, res) {
   const { page = 1, limit = 20, search, farmer } = req.query;
   const query = {};
-  if (farmer) query.farmer = farmer;
-  if (search) {
+  if (farmer && mongoose.Types.ObjectId.isValid(farmer)) query.farmer = farmer;
+  if (search && typeof search === 'string' && search.length < 100) {
+    const safeSearch = escapeRegex(search);
     query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
+      { name: { $regex: safeSearch, $options: 'i' } },
+      { description: { $regex: safeSearch, $options: 'i' } }
     ];
   }
   const products = await Product.find(query)

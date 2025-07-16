@@ -2,8 +2,10 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
 const admin = require('../config/firebaseadmin'); // Fixed casing to match existing file
+const { fileTypeFromBuffer } = require('file-type');
+const cloudinary = require('../utils/cloudinary');
 
-const { validateEmail, validatePassword, validateAddress } = require('../utils/validation');
+const { userSchemas } = require('../utils/validation');
 const { generateUniqueUsername } = require('../utils/username');
 
 const ADMIN_USER_AGENT = 'YOUR_IPHONE_SE_USER_AGENT_STRING'; // Replace with your actual iPhone SE user-agent
@@ -24,23 +26,17 @@ const register = async (req, res) => {
       username = await generateUniqueUsername(name);
     }
 
-    // Validate required fields
-    if (!name || !password || !role || !address || !phone) {
-      return res.status(400).json({
-        message: 'All fields are required',
-        details: {
-          name: !name ? 'Name is required' : undefined,
-          password: !password ? 'Password is required' : undefined,
-          role: !role ? 'Role is required' : undefined,
-          address: !address ? 'Address is required' : undefined,
-          phone: !phone ? 'Phone is required' : undefined
-        }
+    // Joi validation for registration (robust, enterprise-grade)
+    const { error } = userSchemas.register.validate(req.body, { abortEarly: false });
+    if (error) {
+      const details = {};
+      error.details.forEach(detail => {
+        const field = detail.path.join('.');
+        details[field] = detail.message;
       });
-    }
-    if (!validateAddress(address)) {
       return res.status(400).json({
-        message: 'Invalid address structure',
-        details: { address: 'Address must include at least district and state.' }
+        message: 'Validation failed',
+        details
       });
     }
 
@@ -74,19 +70,7 @@ const register = async (req, res) => {
       }
     }
 
-    // Validate email format only if provided
-    if (email && !validateEmail(email)) {
-      return res.status(400).json({
-        message: 'Invalid email format',
-        details: { email: 'Please provide a valid email address' }
-      });
-    }
-    if (!validatePassword(password)) {
-      return res.status(400).json({
-        message: 'Invalid password format',
-        details: { password: 'Password must be at least 7 characters, include uppercase and lowercase letters, and at least one digit. Symbols are allowed.' }
-      });
-    }
+
 
     // Create new user
     const user = new User({
@@ -438,20 +422,48 @@ const generateUsername = async (req, res) => {
   }
 };
 
+function uploadToCloudinary(buffer, folder) {
+  const cloudinary = require('../utils/cloudinary');
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Cloudinary upload timed out')), 15000); // 15s timeout
+    const stream = cloudinary.uploader.upload_stream(
+      { resource_type: 'image', folder },
+      (error, result) => {
+        clearTimeout(timeout);
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    stream.on('error', (err) => {
+      clearTimeout(timeout);
+      reject(err);
+    });
+    stream.end(buffer);
+  });
+}
+
 // Multer+Cloudinary profile image upload handler (to be used in route)
 // Usage: router.patch('/profile/image', auth, upload.single('profileImage'), uploadProfileImage)
 const uploadProfileImage = async (req, res) => {
   try {
-    if (!req.file || !req.file.path) {
+    if (!req.file || !req.file.buffer) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
+    const fileType = await fileTypeFromBuffer(req.file.buffer);
+    if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
+      return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
+    }
+    // Robust Cloudinary upload with timeout
+    const uploadResult = await uploadToCloudinary(req.file.buffer, 'agriconnect/profile_images');
+    // Fetch user from DB, update and save
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    user.profileImageUrl = req.file.path;
+    user.profileImageUrl = uploadResult.secure_url;
     await user.save();
     res.json({ profileImageUrl: user.profileImageUrl });
   } catch (error) {
-    res.status(500).json({ message: 'Error uploading profile image', error: error.message });
+    console.error('Profile image upload error:', error);
+    res.status(500).json({ message: error.message || 'Error uploading profile image' });
   }
 };
 
