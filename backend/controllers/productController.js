@@ -1,11 +1,23 @@
 const Product = require('../models/Product');
-const { validateProduct, productSchema } = require('../utils/orderProductValidation');
+const { validateProduct, productSchema } = require('../utils/productValidation');
 const productNames = require('../config/productNames');
+const { fileTypeFromBuffer } = require('file-type');
+const cloudinary = require('../utils/cloudinary');
 
 // Create a new product
 const createProduct = async (req, res) => {
   try {
-    // Validate product data
+    console.log('req.body:', req.body);
+    console.log('req.files:', req.files);
+    // Parse location if sent as JSON string
+    if (typeof req.body.location === 'string') {
+      try {
+        req.body.location = JSON.parse(req.body.location);
+      } catch (e) {
+        return res.status(400).json({ message: 'Invalid location format' });
+      }
+    }
+    // Validate product data (except images)
     const { error } = validateProduct(req.body);
     if (error) {
       return res.status(400).json({
@@ -13,17 +25,49 @@ const createProduct = async (req, res) => {
         details: error.details
       });
     }
-    // Optionally: Validate image uploads (type/size) here
+    // --- Robust image validation ---
+    const files = req.files;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: 'At least one image file is required.' });
+    }
+    if (files.length > 3) {
+      return res.status(400).json({ message: 'A maximum of 3 images are allowed.' });
+    }
+    // Validate and upload each image
+    const imageUrls = [];
+    for (const file of files) {
+      if (!file.buffer) {
+        return res.status(400).json({ message: 'File buffer missing.' });
+      }
+      const fileType = await fileTypeFromBuffer(file.buffer);
+      if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
+        return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
+      }
+      // Upload to Cloudinary
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'image', folder: 'agriconnect/product_images' },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        stream.end(file.buffer);
+      });
+      imageUrls.push(uploadResult.secure_url);
+    }
+    // --- Create product only if all images are valid and uploaded ---
     const product = new Product({
       ...req.body,
       farmer: req.user._id,
-      minimumOrderQuantity: req.body.minimumOrderQuantity ?? null
+      minimumOrderQuantity: req.body.minimumOrderQuantity ?? null,
+      images: imageUrls,
     });
     await product.save();
     res.status(201).json(product);
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(400).json({ message: 'Error creating product', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+    res.status(400).json({ message: error.message || 'Error creating product' });
   }
 };
 
@@ -49,7 +93,12 @@ const getProducts = async (req, res) => {
 
     // Category filter (supports multiple categories)
     if (category) {
-      query.category = { $in: category.split(',') };
+      // Defensive: handle array or comma-separated string, and ignore 'all' and empty
+      let catArr = Array.isArray(category) ? category : category.split(',');
+      catArr = catArr.filter(c => c && c !== 'all');
+      if (catArr.length > 0) {
+        query.category = { $in: catArr };
+      }
     }
 
     // Filter by product name key
@@ -264,10 +313,33 @@ const uploadProductImages = async (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No images uploaded' });
     }
-    const imageUrls = req.files.map(file => file.path);
+    if (req.files.length > 3) {
+      return res.status(400).json({ message: 'A maximum of 3 images are allowed.' });
+    }
+    const imageUrls = [];
+    for (const file of req.files) {
+      if (!file.buffer) {
+        return res.status(400).json({ message: 'File buffer missing.' });
+      }
+      const fileType = await fileTypeFromBuffer(file.buffer);
+      if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
+        return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
+      }
+      // Upload to Cloudinary
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'image', folder: 'agriconnect/product_images' },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        stream.end(file.buffer);
+      });
+      imageUrls.push(uploadResult.secure_url);
+    }
     product.images.push(...imageUrls);
     await product.save();
-    // Robust response for frontend
     res.json({ urls: imageUrls });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading product images', error: error.message });

@@ -5,7 +5,9 @@ const { auth, authorize } = require('../middleware/auth');
 const { getCategories } = require('../controllers/productController');
 const multer = require('multer');
 const { productImageStorage } = require('../utils/cloudinary');
-const upload = multer({ storage: productImageStorage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+// Use memory storage for product creation and image upload
+const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+const upload = multer({ storage: productImageStorage, limits: { fileSize: 5 * 1024 * 1024 } }); // for other routes if needed
 
 const {
   createProduct,
@@ -32,10 +34,10 @@ router.use(auth); // JWT auth middleware to all following routes
 
 // Farmer-specific routes
 router.get('/farmer/my-products', authorize('farmer'), getMyProducts);
-router.post('/', authorize('farmer'), createProduct);
+router.post('/', authorize('farmer'), memoryUpload.array('images', 3), createProduct);
 router.patch('/:id', authorize('farmer'), updateProduct);
 router.delete('/:id', authorize('farmer'), deleteProduct);
-router.post('/:id/images', authorize('farmer'), upload.array('images', 5), productController.uploadProductImages);
+router.post('/:id/images', authorize('farmer'), memoryUpload.array('images', 3), productController.uploadProductImages);
 
 
 module.exports = router; 

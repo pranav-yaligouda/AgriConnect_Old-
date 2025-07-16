@@ -47,7 +47,8 @@ import {
   Inventory,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import api from "../utils/axiosConfig";
+import { useQuery } from '@tanstack/react-query';
+import { fetchProductById, type Product } from '../services/apiService';
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
 
@@ -159,15 +160,11 @@ function PhoneRequestSection({
   const fetchProductData = async () => {
     try {
       setIsLoading(true);
-      const productResponse = await api.get(`/products/${product._id}`);
+      const updatedProduct = await fetchProductById(product._id);
       const statusResponse = await checkExistingContactRequest(
-        productResponse.data.farmer._id,
-        productResponse.data._id
+        updatedProduct.farmer._id,
+        updatedProduct._id
       );
-  
-      const updatedProduct = productResponse.data as Product;
-      updatedProduct.farmerId = updatedProduct.farmer._id;
-      
       setProduct(updatedProduct);
       setHasPendingRequest(statusResponse);
     } catch (error) {
@@ -444,46 +441,6 @@ function PhoneRequestSection({
   );
 }
 
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-  images: string[];
-  isOrganic: boolean;
-  availableQuantity: number;
-  minimumOrderQuantity?: number | null;
-  harvestDate: string;
-  storageInfo: string;
-  nutritionalInfo?: {
-    calories: number;
-    protein: string;
-    carbs: string;
-    fat: string;
-    fiber: string;
-    vitamins: string;
-  };
-  location: {
-    district: string;
-    state: string;
-  };
-  farmer: {
-    _id: string;
-    name: string;
-    profileImage: string | { data: string; contentType: string };
-    profileImages?: string[];
-    phone: string;
-    email: string;
-    address: {
-      district: string;
-      state: string;
-    };
-    profileImageUrl?: string; // Added profileImageUrl
-  };
-  farmerId: string;
-}
-
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -511,44 +468,22 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pendingFarmers, setPendingFarmers] = useState<string[]>([]);
-  const [existingRequestId, setExistingRequestId] = useState<string | null>(null);
-  const [contactLoading, setContactLoading] = useState(false);
-  const [contactError, setContactError] = useState<string | null>(null);
-
   const [selectedImage, setSelectedImage] = useState(0);
-
   const [tabValue, setTabValue] = useState(0);
-
   const { t } = useTranslation();
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log("Fetching product with ID:", id);
-        const response = await api.get(`/products/${id}`);
-        console.log("Product response:", response.data);
-        const productData = response.data as Product;
-        productData.farmerId = productData.farmer._id;
-        setProduct(productData);
-      } catch (err) {
-        console.error("Error fetching product:", err);
-        setError("Failed to load product details. Please try again later.");
-        toast.error("Failed to load product details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
+  // Use React Query for product details
+  const {
+    data: product,
+    isLoading: loading,
+    error
+  } = useQuery<Product | null>({
+    queryKey: ['product', id],
+    queryFn: () => id ? fetchProductById(id) : Promise.resolve(null),
+    enabled: !!id,
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -584,7 +519,7 @@ const ProductDetails = () => {
     return (
       <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
         <Typography variant="h5" color="error">
-          {error || "Product not found"}
+          {error instanceof Error ? error.message : (typeof error === 'string' ? error : 'Product not found')}
         </Typography>
       </Container>
     );
@@ -971,11 +906,11 @@ const ProductDetails = () => {
                     product={product} 
                     t={t} 
                     navigate={navigate}
-                    isLoading={contactLoading}
-                    setIsLoading={setContactLoading}
-                    error={contactError}
-                    setError={setContactError}
-                    setProduct={setProduct}
+                    isLoading={false}
+                    setIsLoading={() => {}}
+                    error={null}
+                    setError={() => {}}
+                    setProduct={() => {}}
                   />
                 </TabPanel>
               </Box>

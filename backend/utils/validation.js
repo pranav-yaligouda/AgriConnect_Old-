@@ -32,7 +32,7 @@ const userSchemas = {
     
     email: Joi.string()
       .email()
-      .required()
+      .optional()
       .messages(messages),
     
     phone: Joi.string()
@@ -469,5 +469,5 @@ module.exports = {
   adminSchemas,
   validate,
   validateQuery,
-  validateObjectId
+  validateObjectId,
 };

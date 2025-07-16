@@ -1,7 +1,31 @@
 // --- API Service Layer ---
 // Centralized API handler for all endpoints
 import api from '../utils/axiosConfig';
-import { LoginResponse } from '../pages/interfaces';
+import type {
+  RegisterUserPayload,
+  RegisterResponse,
+  ResetPasswordPayload,
+  ApiErrorResponse,
+  User,
+  Product,
+  PaginatedProducts,
+  ProductNameOption,
+  ProfileImageUploadResponse,
+  ProductImageUploadResponse,
+  AdminUser,
+  AdminUsersResponse,
+  ConfirmContactRequestAsUserPayload,
+  ConfirmContactRequestAsFarmerPayload,
+  DisputeResolutionPayload,
+  GenerateUsernameResponse,
+  SuccessResponse,
+  CreateContactRequestResponse,
+  CheckPhoneResponse,
+  ProductDeleteResponse,
+  AccountDeleteResponse,
+  ProfileFetchResponse,
+  DashboardDataResponse
+} from '../types/api';
 
 
 // ----check exisiting contact requests----
@@ -16,13 +40,14 @@ export const checkExistingContactRequest = async (
     );
     return response.data;
   } catch (error: any) {
+
     console.error('Check existing request failed:', error);
     return { exists: false };
   }
 };
 
 // ---- Contact Requests ----
-export async function createContactRequest(productId: string, requestedQuantity: number): Promise<{ message: string; existingRequestId?: string }> {
+export async function createContactRequest(productId: string, requestedQuantity: number): Promise<CreateContactRequestResponse> {
   try {
     const res = await api.post('/contact-requests/create', { productId, requestedQuantity });
     return res.data;
@@ -55,9 +80,9 @@ export const acceptContactRequest = (id: string) =>
 export const rejectContactRequest = (id: string) =>
   api.put(`/contact-requests/${id}/reject`);
 
-export async function loginUser(values: { email: string; password: string }): Promise<LoginResponse> {
+export async function loginUser(values: { email: string; password: string }): Promise<RegisterResponse | ApiErrorResponse> {
   try {
-    const response = await api.post<LoginResponse>('/users/login', values);
+    const response = await api.post<any>('/users/login', values);
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error);
@@ -65,40 +90,44 @@ export async function loginUser(values: { email: string; password: string }): Pr
 }
 
 // ---- User Registration ----
-export async function registerUser(values: any): Promise<any> {
+/**
+ * Register a new user (farmer, vendor, or consumer).
+ * @param values - Registration form values (validated in Register.tsx)
+ * @returns JWT token and user info
+ */
+
+export async function registerUser(values: RegisterUserPayload): Promise<RegisterResponse> {
   try {
-    const response = await api.post('/users/register', values);
+    const response = await api.post<RegisterResponse>('/users/register', values);
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error);
   }
 }
 
-export async function generateUsername(name: string): Promise<{ username: string }> {
+/**
+ * Generate a unique username based on a user's name.
+ * @param name - Full name
+ * @returns Object with generated username
+ */
+export async function generateUsername(name: string): Promise<GenerateUsernameResponse> {
   try {
-    const response = await api.post('/users/generate-username', { name });
-    return response.data as { username: string };
+    const response = await api.post<{ username: string }>('/users/generate-username', { name });
+    return response.data;
   } catch (error: any) {
     throw normalizeApiError(error);
   }
 }
 
-export interface ResetPasswordPayload {
-  phone: string;
-  newPassword: string;
-  idToken: string;
-}
-
 /**
  * Sync new password hash to your backend after Firebase updatePassword.
  */
-export function resetPassword(payload: ResetPasswordPayload) {
-  // baseURL already includes "/api"
-  return api.post<{ success: boolean }>('/users/reset-password', payload);
+export function resetPassword(payload: ResetPasswordPayload): Promise<SuccessResponse> {
+  return api.post<SuccessResponse>('/users/reset-password', payload).then(r => r.data);
 }
 
 // ---- Posts ----
-export async function fetchPosts(): Promise<any[]> {
+export async function fetchPosts(): Promise<SuccessResponse[]> {
   try {
     const response = await api.get('/posts');
     return response.data as any[];
@@ -108,16 +137,10 @@ export async function fetchPosts(): Promise<any[]> {
 }
 
 // ---- Profile ----
-export async function fetchUserProfile(): Promise<any> {
-  try {
-    const response = await api.get('/users/profile');
-    return response.data;
-  } catch (error: any) {
-    throw normalizeApiError(error);
-  }
-}
-
-export async function updateProfile(editForm: any): Promise<any> {
+// Remove fetchUserProfile (now handled by AuthContext)
+// Remove fetchDashboardData (now handled by AuthContext)
+// Keep updateProfile and uploadProfileImageFile as update-only utilities
+export async function updateProfile(editForm: Partial<User>): Promise<ProfileFetchResponse> {
   try {
     const response = await api.patch('/users/profile', editForm);
     return response.data;
@@ -132,7 +155,7 @@ export async function updateProfile(editForm: any): Promise<any> {
  * @param file The image file to upload
  * @returns The updated user profile (with new image URL)
  */
-export async function uploadProfileImageFile(file: File): Promise<any> {
+export async function uploadProfileImageFile(file: File): Promise<ProfileImageUploadResponse> {
   const formData = new FormData();
   formData.append('profileImage', file); // Correct field name for Multer
   try {
@@ -152,7 +175,7 @@ export async function uploadProfileImageFile(file: File): Promise<any> {
  * @param files Array of image files to upload
  * @returns The updated product (with new image URLs)
  */
-export async function uploadProductImages(productId: string, files: File[]): Promise<any> {
+export async function uploadProductImages(productId: string, files: File[]): Promise<ProductImageUploadResponse> {
   const formData = new FormData();
   files.forEach((file) => formData.append('images', file));
   try {
@@ -165,9 +188,10 @@ export async function uploadProductImages(productId: string, files: File[]): Pro
   }
 }
 
-export async function deleteProfile(): Promise<void> {
+export async function deleteProfile(): Promise<AccountDeleteResponse> {
   try {
-    await api.delete('/users/profile');
+    const response = await api.delete<AccountDeleteResponse>('/users/profile');
+    return response.data;
   } catch (error: any) {
     throw normalizeApiError(error);
   }
@@ -203,38 +227,6 @@ export async function fetchCategories(): Promise<string[]> {
   }
 }
 
-export interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-  images: string[];
-  isOrganic: boolean;
-  availableQuantity: number;
-  harvestDate: string;
-  farmer: {
-    name: string;
-    address: {
-      district: string;
-      state: string;
-    };
-  };
-  location: {
-    district: string;
-    state: string;
-  };
-}
-
-export interface ProductNameOption {
-  key: string;
-  en: string;
-  hi: string;
-  kn: string;
-  mr: string;
-  [key: string]: string;
-}
-
 export async function fetchProductNames(category: string): Promise<ProductNameOption[]> {
   try {
     const response = await api.get(`/products/names?category=${category}`);
@@ -244,7 +236,7 @@ export async function fetchProductNames(category: string): Promise<ProductNameOp
   }
 }
 
-export async function fetchProducts(params?: Record<string, any>): Promise<{ products: Product[]; total: number; page: number; pageCount: number }> {
+export async function fetchProducts(params?: Record<string, any>): Promise<PaginatedProducts> {
   try {
     const response = await api.get('/products', { params });
     // Defensive: always return a paginated object
@@ -263,25 +255,36 @@ export async function fetchProducts(params?: Record<string, any>): Promise<{ pro
   }
 }
 
-export async function addProduct(productData: any): Promise<any> {
+/**
+ * Fetch a single product by its ID
+ */
+export async function fetchProductById(id: string): Promise<Product> {
+  const response = await api.get(`/products/${id}`);
+  return response.data;
+}
+
+export async function addProduct(formData: FormData): Promise<Product> {
   try {
-    const response = await api.post('/products', productData);
+    const response = await api.post('/products', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error);
   }
 }
 
-export async function deleteProduct(productId: string): Promise<void> {
+export async function deleteProduct(productId: string): Promise<ProductDeleteResponse> {
   try {
-    await api.delete(`/products/${productId}`);
+    const response = await api.delete<ProductDeleteResponse>(`/products/${productId}`);
+    return response.data;
   } catch (error: any) {
     throw normalizeApiError(error);
   }
 }
 
 // ---- Image Upload ----
-export async function uploadImages(formData: FormData): Promise<any> {
+export async function uploadImages(formData: FormData): Promise<ProductImageUploadResponse> {
   try {
     const response = await api.post('/upload', formData, {
       headers: {
@@ -295,17 +298,10 @@ export async function uploadImages(formData: FormData): Promise<any> {
 }
 
 // ---- Dashboard ----
-export async function fetchDashboardData(): Promise<any> {
-  try {
-    const response = await api.get('/users/dashboard');
-    return response.data;
-  } catch (error: any) {
-    throw normalizeApiError(error);
-  }
-}
+// Remove fetchDashboardData (now handled by AuthContext)
 
 // ---- Users Directory ----
-export async function fetchUsers(query?: string): Promise<any[]> {
+export async function fetchUsers(query?: string): Promise<User[]> {
   try {
     const url = query && query.trim()
       ? `/users/all?q=${encodeURIComponent(query.trim())}`
@@ -318,61 +314,81 @@ export async function fetchUsers(query?: string): Promise<any[]> {
 }
 
 // ---- Contact Request Confirmation ----
-// User confirms purchase (final quantity, price, didBuy, feedback)
-export async function confirmContactRequestAsUser(requestId: string, data: { finalQuantity: number; finalPrice: number; didBuy: boolean; feedback?: string }) {
-  return api.post(`/contact-requests/${requestId}/user-confirm`, data);
+export async function confirmContactRequestAsUser(requestId: string, data: ConfirmContactRequestAsUserPayload): Promise<SuccessResponse> {
+  const response = await api.post<SuccessResponse>(`/contact-requests/${requestId}/user-confirm`, data);
+  return response.data;
 }
+
 // Farmer confirms sale (final quantity, price, didSell, feedback)
-export async function confirmContactRequestAsFarmer(requestId: string, data: { finalQuantity: number; finalPrice: number; didSell: boolean; feedback?: string }) {
-  return api.post(`/contact-requests/${requestId}/farmer-confirm`, data);
+export async function confirmContactRequestAsFarmer(requestId: string, data: ConfirmContactRequestAsFarmerPayload): Promise<SuccessResponse> {
+  const response = await api.post<SuccessResponse>(`/contact-requests/${requestId}/farmer-confirm`, data);
+  return response.data;
 }
 
-// ---- Admin Dispute Tools ----
 // Fetch all disputes (admin only)
-export async function fetchDisputes() {
-  return api.get('/contact-requests/disputes');
-}
-// Admin resolves a dispute
-export async function resolveDispute(requestId: string, data: { adminNote: string; resolution: string }) {
-  return api.post(`/contact-requests/${requestId}/admin-resolve`, data);
+export async function fetchDisputes(): Promise<SuccessResponse[]> {
+  const response = await api.get<SuccessResponse[]>('/contact-requests/disputes');
+  return response.data;
 }
 
-// ---- Admin API ----
+// Admin resolves a dispute
+export async function resolveDispute(requestId: string, data: DisputeResolutionPayload): Promise<SuccessResponse> {
+  const response = await api.post<SuccessResponse>(`/contact-requests/${requestId}/admin-resolve`, data);
+  return response.data;
+}
+
 // Admin login (sends deviceFingerprint)
-export async function adminLogin({ username, password, deviceFingerprint }: { username: string; password: string; deviceFingerprint: string }) {
-  return api.post('/admin/login', { username, password, deviceFingerprint });
+export async function adminLogin({ username, password, deviceFingerprint }: { username: string; password: string; deviceFingerprint: string }): Promise<RegisterResponse> {
+  const response = await api.post<RegisterResponse>('/admin/login', { username, password, deviceFingerprint });
+  return response.data;
 }
+
 // Admin: fetch all users (with pagination/filter/search)
-export async function fetchAdminUsers(params?: Record<string, any>) {
-  return api.get('/admin/users', { params });
+export async function fetchAdminUsers(params?: Record<string, any>): Promise<AdminUsersResponse> {
+  const response = await api.get<AdminUsersResponse>('/admin/users', { params });
+  return response.data;
 }
+
 // Admin: fetch all products (with pagination/filter/search)
-export async function fetchAdminProducts(params?: Record<string, any>) {
-  return api.get('/admin/products', { params });
+export async function fetchAdminProducts(params?: Record<string, any>): Promise<PaginatedProducts> {
+  const response = await api.get<PaginatedProducts>('/admin/products', { params });
+  return response.data;
 }
+
 // Admin: fetch logs
-export async function fetchAdminLogs(params?: Record<string, any>) {
-  return api.get('/admin/logs', { params });
+export async function fetchAdminLogs(params?: Record<string, any>): Promise<SuccessResponse[]> {
+  const response = await api.get<SuccessResponse[]>('/admin/logs', { params });
+  return response.data;
 }
+
 // Admin: fetch settings
-export async function fetchAdminSettings() {
-  return api.get('/admin/settings');
+export async function fetchAdminSettings(): Promise<SuccessResponse> {
+  const response = await api.get<SuccessResponse>('/admin/settings');
+  return response.data;
 }
+
 // Admin: create a new admin
-export async function createAdmin(data: { name: string; username: string; email: string; phone: string; password: string; address: any }) {
-  return api.post('/users/register', { ...data, role: 'admin' });
+export async function createAdmin(data: Omit<AdminUser, '_id' | 'createdAt' | 'adminNotes'> & { password: string }): Promise<RegisterResponse> {
+  const response = await api.post<RegisterResponse>('/users/register', { ...data, role: 'admin' });
+  return response.data;
 }
+
 // Admin: change user role
-export async function changeUserRole(userId: string, role: string) {
-  return api.patch('/admin/users/role', { userId, role });
+export async function changeUserRole(userId: string, role: string): Promise<SuccessResponse> {
+  const response = await api.patch<SuccessResponse>('/admin/users/role', { userId, role });
+  return response.data;
 }
+
 // Admin: update admin notes
-export async function updateAdminNotes(userId: string, adminNotes: string) {
-  return api.patch('/admin/users/admin-notes', { userId, adminNotes });
+export async function updateAdminNotes(userId: string, adminNotes: string): Promise<SuccessResponse> {
+  const response = await api.patch<SuccessResponse>('/admin/users/admin-notes', { userId, adminNotes });
+  return response.data;
 }
+
 // Admin: fetch all contact requests (with pagination/filter/search)
-export async function fetchAdminContactRequests(params?: Record<string, any>) {
-  return api.get('/admin/contact-requests', { params });
+export async function fetchAdminContactRequests(params?: Record<string, any>): Promise<SuccessResponse[]> {
+  const response = await api.get<SuccessResponse[]>('/admin/contact-requests', { params });
+  return response.data;
 }
 
 // ---- Utility: Robust error normalization ----

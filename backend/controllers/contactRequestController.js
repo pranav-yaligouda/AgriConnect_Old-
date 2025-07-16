@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 const ActivityLog = require('../models/ActivityLog');
 const { authorize } = require('../middleware/auth');
+const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const VALID_STATUSES = ['pending', 'accepted', 'completed', 'disputed', 'expired', 'rejected'];
 
 const MAX_REQUESTS = { user: 2, vendor: 5 };
 
@@ -398,11 +400,12 @@ exports.getAllContactRequests = [require('../middleware/auth').authorize('admin'
   try {
     const { page = 1, limit = 20, status, search } = req.query;
     const query = {};
-    if (status) query.status = status;
-    if (search) {
+    if (status && VALID_STATUSES.includes(status)) query.status = status;
+    if (search && typeof search === 'string' && search.length < 100) {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { 'requesterName': { $regex: search, $options: 'i' } },
-        { 'farmerName': { $regex: search, $options: 'i' } }
+        { requesterName: { $regex: safeSearch, $options: 'i' } },
+        { farmerName: { $regex: safeSearch, $options: 'i' } }
       ];
     }
     const requests = await ContactRequest.find(query)

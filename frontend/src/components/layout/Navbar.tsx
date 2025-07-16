@@ -1,5 +1,4 @@
 // Navbar.tsx
-// Enhanced responsive navigation bar for AgriConnect
 // Includes all main routes: Connections, Marketplace, Profile, etc.
 // Provides mobile drawer and desktop layout, authentication-aware links, and user menu
 import { useState, useEffect } from "react";
@@ -44,6 +43,7 @@ import AgricultureIcon from "@mui/icons-material/Agriculture";
 import LanguageSwitcher from "../LanguageSwitcher";
 import ImageWithFallback from '../ImageWithFallback';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../hooks/useAuth';
 
 // Navbar component for AgriConnect
 const Navbar = () => {
@@ -55,6 +55,7 @@ const Navbar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   // Scroll to top on route change
   useEffect(() => {
@@ -62,8 +63,7 @@ const Navbar = () => {
   }, [location.pathname]);
 
   // Authentication status (replace with auth context in production)
-  const token = localStorage.getItem("token");
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!user;
 
   // Handlers for user menu and mobile drawer
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -75,19 +75,17 @@ const Navbar = () => {
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+  const { logout } = useAuth();
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     handleMenuClose();
     navigate("/");
-    window.location.reload();
   };
 
   // Main navigation links (order: Marketplace, Dashboard, Profile)
   const mainMenuItems = [
     { text: "Marketplace", path: "/marketplace", icon: <ShoppingBasket />, auth: false },
-    { text: "Dashboard", path: "/dashboard", icon: <Dashboard />, auth: true },
-    // { text: "Users", path: "/users-directory", icon: <Group />, auth: true },
-    // { text: "Profile", path: "/profile", icon: <Person />, auth: true }, // Desktop profile removed
+    ...(isAuthenticated ? [{ text: "Dashboard", path: "/dashboard", icon: <Dashboard />, auth: true }] : []),
   ];
 
   // Helper to check if a route is active

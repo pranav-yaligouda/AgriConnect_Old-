@@ -63,31 +63,10 @@ import { fetchProducts, fetchCategories } from "../services/apiService";
 // Removed incorrect import. Use apiService and axiosConfig for all API calls.
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
+import type { Product } from '../services/apiService';
 
 import { useTranslation } from "react-i18next";
-
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-  images: string[];
-  isOrganic: boolean;
-  availableQuantity: number;
-  harvestDate: string;
-  farmer: {
-    name: string;
-    address: {
-      district: string;
-      state: string;
-    };
-  };
-  location: {
-    district: string;
-    state: string;
-  };
-}
 
 const Marketplace = () => {
   const theme = useTheme();
@@ -95,98 +74,79 @@ const Marketplace = () => {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
-  const [categories, setCategories] = useState<string[]>([]);
-  const { t } = useTranslation('marketplace');
-
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState("");
-
   const [sortBy, setSortBy] = useState("featured");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [organicOnly, setOrganicOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageCount, setPageCount] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
   const productsPerPage = isTablet ? 6 : 12;
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation('marketplace');
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
-  // Updated useEffect for fetching products
-  useEffect(() => {
-    const handleFetchProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null); // Ensure error is reset before fetching
-        const params = {
-          search: debouncedSearchQuery,
-          category: selectedCategories.includes("all")
-            ? undefined
-            : selectedCategories.join(","),
-          district: selectedDistrict,
-          ...(organicOnly && { isOrganic: true }),
-          sort: sortBy,
-          page: currentPage,
-          limit: productsPerPage
-        };
-        const { products, total, pageCount: backendPageCount } = await fetchProducts(params);
-        setProducts(Array.isArray(products) ? products : []);
-        setTotalProducts(total);
-        setPageCount(backendPageCount);
-      } catch (err) {
-        let message = t ? t('fetchError') : 'Failed to fetch products';
-        console.error('fetchProducts error:', err);
-        setError(message);
-        setProducts([]); // Ensure products is always an array
-        toast.error(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    handleFetchProducts();
-  }, [
-    debouncedSearchQuery,
-    selectedCategories,
-    organicOnly,
-    sortBy,
-    selectedDistrict,
-    currentPage,
-    productsPerPage
-  ]);
-
-  useEffect(() => {
-    fetchCategories()
-      .then((res: string[]) => {
-        if (Array.isArray(res)) {
-          setCategories(["all", ...res.filter((c) => c !== "all")]);
-        }
-      })
-      .catch((err: unknown) => {
-        console.error("Failed to load categories:", err);
-        toast.error("Failed to load categories");
-        setCategories(["all"]);
-      });
-  }, []);
-
-  // Add this useEffect for debouncing
+  // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 500); // 500ms delay
-
-    return () => {
-      clearTimeout(handler);
-    };
+    }, 500);
+    return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  const uniqueDistricts = Array.from(
-    new Set(
-      (products || [])
-        .map((product) => product.location?.district)
-        .filter((district) => district !== undefined)
-    )
+  // React Query for categories
+  const {
+    data: categoriesData,
+    isLoading: categoriesLoading,
+    error: categoriesError
+  } = useQuery<string[]>({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
+    staleTime: 10 * 60 * 1000
+  });
+  const categories: string[] = categoriesData || [];
+
+  // React Query for products
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    isFetching: productsFetching,
+    error: productsError
+  } = useQuery<{ products: Product[]; total: number; page: number; pageCount: number }>({
+    queryKey: [
+      'products',
+      debouncedSearchQuery,
+      selectedCategories.join(','),
+      selectedDistrict,
+      organicOnly, // still in key for cache separation
+      sortBy,
+      currentPage,
+      productsPerPage,
+    ],
+    queryFn: () => fetchProducts({
+          search: debouncedSearchQuery,
+      category: selectedCategories.includes('all') || selectedCategories.length === 0
+            ? undefined
+        : selectedCategories.join(','),
+          district: selectedDistrict,
+      // Only send isOrganic if organicOnly is true
+      ...(organicOnly ? { isOrganic: true } : {}),
+          sort: sortBy,
+          page: currentPage,
+      limit: productsPerPage,
+    }),
+    staleTime: 60 * 1000,
+    keepPreviousData: true,
+  });
+  // Debug: log the productsData to verify API response
+  useEffect(() => {
+    console.log('productsData', productsData);
+  }, [productsData]);
+  const products: Product[] = productsData?.products || [];
+  const totalProducts: number = productsData?.total || 0;
+  const pageCount: number = productsData?.pageCount || 1;
+
+  // Unique districts from products
+  const uniqueDistricts: string[] = Array.from(
+    new Set((products || []).map((product: Product) => product.location?.district).filter((district: string | undefined): district is string => district !== undefined))
   ).sort();
 
   const handleCategoryChange = (category: string) => {
@@ -227,7 +187,7 @@ const Marketplace = () => {
   const capitalize = (str: string) =>
     str.charAt(0).toUpperCase() + str.slice(1);
 
-  if (loading) {
+  if (productsLoading || categoriesLoading) {
     return (
       <Container
         maxWidth="lg"
@@ -244,11 +204,13 @@ const Marketplace = () => {
     );
   }
 
-  if (error) {
+  if (productsError || categoriesError) {
+    const errorMsg = typeof productsError === 'string' ? productsError : (productsError instanceof Error ? productsError.message : '') ||
+      (typeof categoriesError === 'string' ? categoriesError : (categoriesError instanceof Error ? categoriesError.message : '')) || 'Unknown error';
     return (
       <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
         <Typography variant="h5" color="error">
-          {error}
+          {errorMsg}
         </Typography>
       </Container>
     );
@@ -333,7 +295,7 @@ const Marketplace = () => {
                 label={t('category')}
                 renderValue={(selected) => (
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {(selected as string[]).map((value) => (
+                    {(selected as string[]).map((value: string) => (
                       <Chip
                         key={value}
                         label={capitalize(value)}
@@ -349,7 +311,7 @@ const Marketplace = () => {
                   "&:hover": { bgcolor: "grey.50" },
                 }}
               >
-                {(categories || []).map((category) => (
+                {(categories || []).map((category: string) => (
                   <MenuItem key={category} value={category}>
                     <Checkbox checked={selectedCategories.includes(category)} />
                     <ListItemText primary={capitalize(category)} />

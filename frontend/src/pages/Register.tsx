@@ -37,8 +37,10 @@ import {
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import api from '../utils/axiosConfig'; // Centralized axios instance for all API calls
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import type { RegisterUserPayload, RegisterAddress, RegisterResponse } from '../types/api';
+import { registerUser, generateUsername } from '../services/apiService';
 
 import { useTranslation } from 'react-i18next';
 import { stateDistricts } from '../data/stateDistricts';
@@ -87,6 +89,43 @@ function PasswordStrengthBar({ password }: { password: string }) {
 }
 
 const Register = () => {
+  const queryClient = useQueryClient();
+
+  // Registration mutation
+  const registerMutation = useMutation<RegisterResponse, any, RegisterUserPayload>({
+    mutationFn: registerUser,
+    onSuccess: (data) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', data.token);
+      }
+      toast.success('Registration successful!');
+      setTimeout(() => {
+        navigate('/profile');
+      }, 100);
+    },
+    onError: (error: any) => {
+      if (error?.message) {
+        toast.error(error.message || 'Registration failed');
+      }
+      if (error?.details) {
+        Object.values(error.details).forEach((msg: any) => toast.error(String(msg)));
+      }
+    },
+  });
+
+  // Username generation mutation
+  const generateUsernameMutation = useMutation<{ username: string }, any, string>({
+    mutationFn: generateUsername,
+    onMutate: () => setUsernameLoading(true),
+    onSuccess: (data) => {
+      formik.setFieldValue('username', data.username);
+      setUsernameLoading(false);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Username generation failed');
+      setUsernameLoading(false);
+    },
+  });
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -167,23 +206,11 @@ useEffect(() => {
         // Auto-generate username if not provided
         let username = values.username;
         if (!username || username.trim() === "") {
-          // Call backend to generate username from name
-          const { generateUsername, registerUser } = await import('../services/apiService');
-          const resp = await generateUsername(values.name);
-          // Explicitly assert the type to avoid 'unknown' error
-          username = (resp as { username: string }).username;
+          // Use React Query mutation for username generation
+          const { username: generatedUsername } = await generateUsernameMutation.mutateAsync(values.name);
+          username = generatedUsername;
         }
-        // Define a type-safe address object
-        interface RegisterAddress {
-          district: string;
-          state: string;
-          street?: string;
-          zipcode?: string;
-        }
-        interface RegisterResponse {
-          token: string;
-          [key: string]: any;
-        }
+        // Use canonical types from types/api.ts
         const address: RegisterAddress = {
           district: values.district,
           state: values.state,
@@ -194,45 +221,21 @@ useEffect(() => {
         if (values.zipcode && values.zipcode.trim() !== "") {
           address.zipcode = values.zipcode;
         }
-        const reqBody: any = {
+        // Always strip +91 if present before sending to backend
+        const cleanPhone = values.phone.startsWith('+91') ? values.phone.slice(3) : values.phone;
+        const reqBody: RegisterUserPayload = {
           username: username,
           name: values.name,
           password: values.password,
           role: values.role,
-          phone: values.phone,
+          phone: cleanPhone,
           address,
         };
         if (values.email) reqBody.email = values.email;
         // Debug: Log the registration body
         console.log('Register API body:', reqBody);
-        // Dynamically import apiService if not statically imported in this scope
-        const { registerUser } = await import('../services/apiService');
-        // Use centralized api instance for registration
-        let response;
-        try {
-          response = await api.post<RegisterResponse>(`/users/register`, reqBody);
-        } catch (apiError: any) {
-          // Show backend error details if available
-          if (apiError?.response?.data) {
-            toast.error(apiError.response.data.message || 'Registration failed');
-            if (apiError.response.data.details) {
-              Object.values(apiError.response.data.details).forEach((msg: any) => toast.error(String(msg)));
-            }
-          } else {
-            toast.error(apiError.message || 'Registration failed');
-          }
-          setSubmitting(false);
-          return;
-        }
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('token', response.data.token);
-        }
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        toast.success(t('register.success'));
-        // Ensure navigation only after token is set and registration is successful
-        setTimeout(() => {
-          navigate('/profile');
-        }, 100);
+        // Use React Query mutation for registration
+        registerMutation.mutate(reqBody);
       } catch (error: any) {
         let message = error?.message || t('register.error');
         const errorDetails = error?.details;
@@ -554,27 +557,6 @@ useEffect(() => {
                           <Email />
                         </InputAdornment>
                       ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="phone"
-                    name="phone"
-                    label={t('register.phone')}
-                    value={formik.values.phone}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.phone && Boolean(formik.errors.phone)}
-                    helperText={formik.touched.phone && formik.errors.phone}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Phone />
-                        </InputAdornment>
-                      ),
-                      readOnly: !!phoneFromOTP
                     }}
                   />
                 </Grid>
