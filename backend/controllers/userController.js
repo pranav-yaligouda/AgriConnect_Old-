@@ -7,13 +7,10 @@ const cloudinary = require('../utils/cloudinary');
 
 const { userSchemas } = require('../utils/validation');
 const { generateUniqueUsername } = require('../utils/username');
+const { normalizePhone } = require('../utils/phone');
+const { signJwt } = require('../utils/jwt');
 
 const ADMIN_USER_AGENT = 'YOUR_IPHONE_SE_USER_AGENT_STRING'; // Replace with your actual iPhone SE user-agent
-
-// Utility to normalize phone numbers (India)
-function normalizePhone(phone) {
-  return phone.replace(/\D/g, '').slice(-10);
-}
 
 // Register a new user
 const register = async (req, res) => {
@@ -24,32 +21,34 @@ const register = async (req, res) => {
         error: 'req.body is undefined or not an object. Ensure Content-Type: application/json and valid JSON body.'
       });
     }
-    let { username, name, email, password, role, address, phone, phoneVerified } = req.body || {};
+    let { username, name, email, password, role, address, phone, idToken } = req.body || {};
 
-    // Enforce phone verification (must be true/flagged by OTP flow)
-    if (!phoneVerified) {
+    // Require and verify Firebase ID token (OTP verification)
+    if (!idToken) {
       return res.status(400).json({
-        message: 'Phone verification required',
-        details: { phone: 'You must verify your phone number before registering.' }
+        message: 'OTP verification required. Please verify your phone number.'
       });
+    }
+    phone = normalizePhone(phone);
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(idToken);
+    } catch (err) {
+      return res.status(403).json({ message: 'Invalid or expired OTP token.' });
+    }
+    if (normalizePhone(decoded.phone_number) !== phone) {
+      return res.status(403).json({ message: 'Phone number does not match OTP verification.' });
     }
 
     // Always lowercase username if provided
     if (username) username = username.toLowerCase();
-
-    // Auto-generate username if not provided
     if (!username && name) {
       username = await generateUniqueUsername(name);
     }
-
-    // Lowercase username in request body for Joi validation
     req.body.username = username;
 
-    // Normalize phone for storage and lookup
-    phone = normalizePhone(phone);
-
     // Joi validation for registration (robust, enterprise-grade)
-    const { error } = userSchemas.register.validate(req.body, { abortEarly: false });
+    const { error } = userSchemas.register.validate({ ...req.body, phone }, { abortEarly: false });
     if (error) {
       const details = {};
       error.details.forEach(detail => {
@@ -70,13 +69,9 @@ const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         message: 'Registration failed',
-        details: {
-          phone: 'This phone number is already in use.'
-        }
+        details: { phone: 'This phone number is already in use.' }
       });
     }
-
-    // Optionally, check for duplicate email only if provided
     if (email) {
       if (typeof email !== 'string') {
         return res.status(400).json({ message: 'Invalid email' });
@@ -85,32 +80,27 @@ const register = async (req, res) => {
       if (emailUser) {
         return res.status(400).json({
           message: 'Registration failed',
-          details: {
-            email: 'This email is already in use.'
-          }
+          details: { email: 'This email is already in use.' }
         });
       }
     }
-
-    // Create new user, handle duplicate username race condition
     let user;
     let attempts = 0;
     while (attempts < 3) {
       try {
         user = new User({
-      username,
-      name,
-      email,
-      password,
-      role,
-      address,
-      phone, // always normalized
-      profileImageUrl: req.body.profileImageUrl || null
-    });
-    await user.save();
-        break; // Success
+          username,
+          name,
+          email,
+          password,
+          role,
+          address,
+          phone,
+          profileImageUrl: req.body.profileImageUrl || null
+        });
+        await user.save();
+        break;
       } catch (err) {
-        // Duplicate username error (race condition)
         if (err.code === 11000 && err.keyPattern && err.keyPattern.username) {
           username = await generateUniqueUsername(name);
           req.body.username = username;
@@ -123,19 +113,12 @@ const register = async (req, res) => {
     if (!user) {
       return res.status(500).json({ message: 'Could not generate a unique username. Please try again.' });
     }
-
-    // Check for JWT secret
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ message: 'Internal server error: JWT secret is not set.' });
     }
-    // Generate token
-    const token = jwt.sign(
-      { userId: user._id, tokenVersion: user.tokenVersion },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+    const token = signJwt(
+      { userId: user._id, tokenVersion: user.tokenVersion }
     );
-
-    // Always return both profileImages (array) and profileImage (string, first image or null)
     const userObj = user.toObject ? user.toObject() : user;
     delete userObj.password;
     res.status(201).json({
@@ -144,7 +127,6 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = {};
       Object.keys(error.errors).forEach(key => {
@@ -155,7 +137,6 @@ const register = async (req, res) => {
         details: validationErrors
       });
     }
-    // Generic error message for user enumeration protection
     res.status(500).json({
       message: 'Registration failed. Please try again later.'
     });
@@ -224,11 +205,7 @@ const login = async (req, res) => {
     }
 
     // Generate token
-    const token = jwt.sign(
-      { userId: user._id, tokenVersion: user.tokenVersion },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = signJwt({ userId: user._id, tokenVersion: user.tokenVersion });
 
     res.json({
       user: {

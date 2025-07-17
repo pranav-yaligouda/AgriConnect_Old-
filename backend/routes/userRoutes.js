@@ -26,13 +26,34 @@ const usernameLimiter = rateLimit({
   message: { message: 'Too many requests. Please try again later.' }
 });
 
+const registerLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: { message: 'Too many registration attempts. Please try again later.' }
+});
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { message: 'Too many login attempts. Please try again later.' }
+});
+const resetPasswordLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { message: 'Too many password reset attempts. Please try again later.' }
+});
+const checkPhoneLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { message: 'Too many phone checks. Please try again later.' }
+});
+
 // Public routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/reset-password', resetPassword);
+router.post('/register', registerLimiter, register);
+router.post('/login', loginLimiter, login);
+router.post('/reset-password', resetPasswordLimiter, resetPassword);
 router.post('/generate-username', usernameLimiter, generateUsername);
 router.post('/check-username', usernameLimiter, checkUsername);
-router.post('/check-phone', checkPhone);
+router.post('/check-phone', checkPhoneLimiter, checkPhone);
 
 // Protected routes
 router.get('/profile', auth, getProfile);

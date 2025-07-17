@@ -126,15 +126,6 @@ export function resetPassword(payload: ResetPasswordPayload): Promise<SuccessRes
   return api.post<SuccessResponse>('/users/reset-password', payload).then(r => r.data);
 }
 
-// ---- Posts ----
-export async function fetchPosts(): Promise<SuccessResponse[]> {
-  try {
-    const response = await api.get('/posts');
-    return response.data as any[];
-  } catch (error: any) {
-    throw normalizeApiError(error);
-  }
-}
 
 // ---- Profile ----
 // Remove fetchUserProfile (now handled by AuthContext)

@@ -36,13 +36,8 @@ const Home = () => {
     setIsLoggedIn(!!token);
   }, []);
 
-  useEffect(() => {
-    if (location.state && location.state.registrationSuccess) {
-      notify(t('register.success'), 'success');
-      // Clear the state so the toast doesn't show again on refresh
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state, notify, t]);
+  // Removed registration success notification and redirect logic
+  
 
   const features = [
     {

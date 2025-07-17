@@ -13,7 +13,7 @@ declare global {
 
 interface PhoneAuthProps {
   phoneNumber: string;                  // international format: +91XXXXXXXXXX
-  onVerify?: (phone: string) => void;   // callback when OTP verified
+  onVerify?: (phone: string, idToken: string) => void;   // callback when OTP verified
 }
 
 const PhoneAuth: React.FC<PhoneAuthProps> = ({ phoneNumber, onVerify }) => {
@@ -90,7 +90,10 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ phoneNumber, onVerify }) => {
       setOtpVerified(true);
 
       // Notify parent if provided
-      if (onVerify) onVerify(phoneNumber);
+      // Get idToken from Firebase user
+      const user = auth.currentUser;
+      const idToken = user ? await user.getIdToken() : '';
+      if (onVerify) onVerify(phoneNumber, idToken);
     } catch (err: any) {
       setError(err.message || 'Invalid OTP.');
     } finally {

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from '../hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchProducts, addProduct, deleteProduct, uploadProductImages, fetchProductNames } from "../services/apiService";
+import { fetchProducts, fetchMyProducts, addProduct, deleteProduct, uploadProductImages, fetchProductNames } from "../services/apiService";
 import type { Product, PaginatedProducts, ProductNameOption } from '../types/api';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useNotification } from '../contexts/NotificationContext';
@@ -76,18 +76,32 @@ const Dashboard: React.FC = () => {
     return () => { isMountedRef.current = false; };
   }, []);
 
-  // React Query: Fetch products
+  // React Query: Fetch products (role-based, robust, and typed)
   const {
     data: productsData,
     isLoading: productsLoading,
     isError: productsError,
     error: productsErrorObj
-  } = useQuery<PaginatedProducts, Error>({
-    queryKey: ['products', retryCount],
-    queryFn: fetchProducts,
+  } = useQuery<Product[] | PaginatedProducts, Error>({
+    queryKey: ['dashboardProducts', user?.role, retryCount],
+    queryFn: () => {
+      if (user?.role === 'farmer') {
+        // Secure, role-based endpoint: only loggedin farmer's products
+        return fetchMyProducts(); // returns Product[]
+      } else {
+        // Public, paginated endpoint: all products
+        return fetchProducts().then(res => res); // returns PaginatedProducts
+      }
+    },
+    enabled: !!user,
     staleTime: 60 * 1000,
   });
-  const products: Product[] = productsData?.products ?? [];
+
+  // Normalize products for all roles
+  const products: Product[] =
+    user?.role === 'farmer'
+      ? (productsData as Product[]) ?? []
+      : ((productsData as PaginatedProducts)?.products ?? []);
 
   // React Query: Fetch product names by category and language
   const {

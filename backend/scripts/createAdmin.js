@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const readline = require('readline');
 const User = require('../models/User');
 const config = require('../config');
+const { normalizePhone } = require('../utils/phone');
 
 // Helper to prompt for input
 function prompt(question) {
@@ -19,7 +20,8 @@ async function main() {
     const name = await prompt('Admin Name: ');
     const username = await prompt('Username: ');
     const email = await prompt('Email: ');
-    const phone = await prompt('Phone (+91...): ');
+    const phoneRaw = await prompt('Phone (+91...): ');
+    const phone = normalizePhone(phoneRaw);
     const passwordRaw = await prompt('Password: ');
     const street = await prompt('Street (optional): ');
     const district = await prompt('District: ');

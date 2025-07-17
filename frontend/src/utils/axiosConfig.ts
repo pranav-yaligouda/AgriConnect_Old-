@@ -74,8 +74,11 @@ instance.interceptors.response.use(
   error => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      // Optionally, clear other sensitive data or context here
-      window.location.href = '/login';
+      // Only redirect if not already on /login or /register
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/register') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

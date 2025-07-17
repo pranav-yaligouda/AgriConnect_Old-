@@ -30,6 +30,7 @@ import { useNotification } from '../contexts/NotificationContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/axiosConfig';
+import { getAuth } from 'firebase/auth';
 
 const roleOptions = [
   { value: 'farmer', label: 'Farmer (Sell your produce)' },
@@ -66,6 +67,7 @@ const Register = () => {
   const geo = geoMap[i18n.language] || enGeo;
   const [usernameMode, setUsernameMode] = useState<'auto' | 'manual'>('auto');
   const { setToken } = useAuth();
+  const idToken = location.state?.idToken;
 
   // Restrict direct access to register page and enforce phone verification
   useEffect(() => {
@@ -92,7 +94,13 @@ const Register = () => {
     mutationFn: registerUser,
     onSuccess: async (data) => {
       setToken(data.token);
-      navigate('/', { state: { registrationSuccess: true } });
+      // Sign out from Firebase after registration (if OTP used)
+      try {
+        const auth = getAuth();
+        if (auth.currentUser) await auth.signOut();
+      } catch {}
+      notify(t('register.success'), 'success');
+      navigate('/profile', { replace: true });
     },
     onError: (error: any) => {
       if (error?.message) {
@@ -160,6 +168,11 @@ const Register = () => {
     }),
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
+        if (!idToken) {
+          notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your phone number.'), 'error');
+          setSubmitting(false);
+          return;
+        }
         let username = values.username;
         if (!username || username.trim() === '') {
           // Always use backend for username generation
@@ -179,15 +192,15 @@ const Register = () => {
           address.zipcode = values.zipcode;
         }
         const cleanPhone = values.phone.startsWith('+91') ? values.phone.slice(3) : values.phone;
-        // Add phoneVerified flag for backend enforcement
-        const reqBody: RegisterUserPayload & { phoneVerified: boolean } = {
+        // Add idToken for backend enforcement
+        const reqBody: RegisterUserPayload & { idToken: string } = {
           username: username,
           name: values.name,
           password: values.password,
           role: values.role as 'user' | 'farmer' | 'vendor',
           phone: cleanPhone,
           address,
-          phoneVerified: true,
+          idToken,
         };
         if (values.email) reqBody.email = values.email;
         registerMutation.mutate(reqBody);

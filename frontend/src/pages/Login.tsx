@@ -20,9 +20,10 @@ import PhoneAuth from '../components/PhoneAuth';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import api from '../utils/axiosConfig';
-import type { ApiResponse } from './interfaces';
+import type { ApiErrorResponse } from '../types/api';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LoginFormValues {
   password: string;
@@ -32,6 +33,8 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { notify } = useNotification();
+  const { setToken } = useAuth();
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // —————————————————————————————
   // Phone-Auth & Reset-Password state
@@ -62,7 +65,7 @@ const Login: React.FC = () => {
     setLoadingPhoneCheck(true);
     try {
       const formattedPhone = formatPhone(phone);
-      const res = await api.post<ApiResponse>('/users/check-phone', { phone: formattedPhone });
+      const res = await api.post<any>('/users/check-phone', { phone: formattedPhone });
       setIsRegistered(Boolean(res.data.exists));
     } catch (err: any) {
       setIsRegistered(null);
@@ -95,33 +98,38 @@ const Login: React.FC = () => {
     }),
     onSubmit: async (values, helpers) => {
       helpers.setSubmitting(true);
+      setLoginError(null);
       try {
-        const res = await api.post<ApiResponse>('/users/login', {
+        const res = await api.post<any>('/users/login', {
           phone: phoneNumber,
           password: values.password
         });
         if (res.data.token) {
-          localStorage.setItem('token', res.data.token);
-          api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+          setToken(res.data.token);
           notify(t('login.success'), 'success');
           setTimeout(() => navigate('/profile', { replace: true }), 300);
         } else {
-          notify(t('login.error'), 'error');
+          setLoginError(t('login.invalidCredentials'));
           helpers.setFieldError('password', t('login.invalidCredentials'));
         }
       } catch (err: any) {
         helpers.setSubmitting(false);
         if (err.response?.status === 401) {
+          setLoginError(t('login.invalidCredentials'));
           helpers.setFieldError('password', t('login.invalidCredentials'));
-          notify(t('login.invalidCredentials'), 'error');
         } else {
-          notify(err.message || t('login.error'), 'error');
+          setLoginError(err.message || t('login.error'));
         }
       } finally {
         helpers.setSubmitting(false);
       }
     }
   });
+
+  // Clear error on input change
+  useEffect(() => {
+    setLoginError(null);
+  }, [formik.values.password, phoneNumber]);
 
   // —————————————————————————————
   // Handle Reset-Password submit
@@ -191,8 +199,8 @@ const Login: React.FC = () => {
           {isRegistered === false && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !resetMode && !loadingPhoneCheck && (
             <PhoneAuth
               phoneNumber={phoneNumber}
-              onVerify={() => navigate('/register', {
-                state: { fromLogin: true, phone: phoneNumber, fromOTP: true }
+              onVerify={(_phone, idToken) => navigate('/register', {
+                state: { fromLogin: true, phone: phoneNumber, fromOTP: true, idToken }
               })}
             />
           )}
@@ -207,8 +215,8 @@ const Login: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={formik.values.password}
                 onChange={formik.handleChange}
-                error={Boolean(formik.touched.password && formik.errors.password)}
-                helperText={formik.touched.password && formik.errors.password}
+                error={Boolean(formik.touched.password && (formik.errors.password || loginError))}
+                helperText={formik.touched.password && (formik.errors.password || loginError)}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -241,7 +249,7 @@ const Login: React.FC = () => {
           {resetMode && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && (
             <PhoneAuth
               phoneNumber={phoneNumber}
-              onVerify={() => {
+              onVerify={(_phone, idToken) => {
                 setResetMode(false);
                 setShowResetForm(true);
               }}

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const { verifyJwt } = require('../utils/jwt');
 
 // Add session validation and token invalidation
 const checkTokenValidity = async (decoded) => {
@@ -21,7 +22,7 @@ const auth = async (req, res, next) => {
     }
     if (!token) throw new Error('Authentication token missing');
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyJwt(token);
     if (!(await checkTokenValidity(decoded))) {
       throw new Error('Token revoked');
     }

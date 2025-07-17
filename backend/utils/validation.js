@@ -67,13 +67,7 @@ const userSchemas = {
       .optional()
       .messages(messages),
 
-    phoneVerified: Joi.boolean()
-      .valid(true)
-      .required()
-      .messages({
-        'any.only': 'Phone verification is required before registration.',
-        'any.required': 'Phone verification is required before registration.'
-      })
+    idToken: Joi.string().optional()
   }),
 
   login: Joi.object({

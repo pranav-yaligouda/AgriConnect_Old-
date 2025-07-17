@@ -7,6 +7,7 @@ const { adminSchemas } = require('../utils/validation');
 const AdminActionLog = require('../models/AdminActionLog');
 const mongoose = require('mongoose');
 const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const { signJwt } = require('../utils/jwt');
 
 const VALID_ROLES = ['user', 'farmer', 'vendor', 'admin'];
 const VALID_STATUSES = ['pending', 'accepted', 'completed', 'disputed', 'expired', 'rejected'];
@@ -109,10 +110,10 @@ async function adminLogin(req, res) {
       });
       return res.status(403).json({ message: 'Access denied: device not recognized' });
     }
-    const token = jwt.sign(
+    const token = signJwt(
       { userId: user._id, tokenVersion: user.tokenVersion },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      '7d'
     );
     await logAdminAction({
       admin: user._id,

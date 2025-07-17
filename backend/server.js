@@ -203,6 +203,11 @@ try {
   process.exit(1);
 }
 
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('FATAL: JWT_SECRET is not set or is too weak (must be at least 32 characters).');
+  process.exit(1);
+}
+
 const maxRequests = config.getAsNumber('RATE_LIMIT_MAX') || 
   (config.get('NODE_ENV') === 'development' ? 10000 : 100);
 
