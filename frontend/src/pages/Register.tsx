@@ -92,8 +92,7 @@ const Register = () => {
     mutationFn: registerUser,
     onSuccess: async (data) => {
       setToken(data.token);
-      notify(t('register.success'), 'success');
-      navigate('/');
+      navigate('/', { state: { registrationSuccess: true } });
     },
     onError: (error: any) => {
       if (error?.message) {
@@ -458,7 +457,7 @@ const Register = () => {
                   getTranslatedDistrict={getTranslatedDistrict}
                 />
               )}
-              {activeStep === 3 && <FinishStep />}
+              {/* Remove FinishStep to prevent showing success message before redirect */}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 4 }}>
               {activeStep > 0 && (
                 <Button

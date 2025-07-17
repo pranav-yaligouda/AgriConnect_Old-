@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Button,
@@ -21,17 +21,28 @@ import {
 } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useNotification } from '../contexts/NotificationContext';
 
 const Home = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { t } = useTranslation();
+  const location = useLocation();
+  const { notify } = useNotification();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
+
+  useEffect(() => {
+    if (location.state && location.state.registrationSuccess) {
+      notify(t('register.success'), 'success');
+      // Clear the state so the toast doesn't show again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, notify, t]);
 
   const features = [
     {
