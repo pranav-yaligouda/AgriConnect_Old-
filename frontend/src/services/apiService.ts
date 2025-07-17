@@ -391,6 +391,20 @@ export async function fetchAdminContactRequests(params?: Record<string, any>): P
   return response.data;
 }
 
+/**
+ * Check if a username is available (unique and valid)
+ * @param username - Username to check
+ * @returns Object with available: boolean
+ */
+export async function checkUsername(username: string): Promise<{ available: boolean; message?: string }> {
+  try {
+    const response = await api.post<{ available: boolean; message?: string }>('/users/check-username', { username });
+    return response.data;
+  } catch (error: any) {
+    return { available: false, message: error?.message || 'Error checking username' };
+  }
+}
+
 // ---- Utility: Robust error normalization ----
 function normalizeApiError(error: any) {
   // Handles axios and native errors gracefully

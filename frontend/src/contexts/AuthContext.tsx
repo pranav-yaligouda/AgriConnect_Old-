@@ -9,6 +9,7 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   refreshUser: () => Promise<void>;
+  setToken: (token: string | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,8 +21,20 @@ interface LoginResponse {
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setTokenState] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+
+  // Centralized token setter
+  const setToken = (newToken: string | null) => {
+    setTokenState(newToken);
+    if (newToken) {
+      localStorage.setItem('token', newToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    } else {
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  };
 
   const fetchUser = async () => {
     if (!token) {
@@ -52,18 +65,16 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     const res = await axios.post<LoginResponse>('/auth/login', { email, password });
     setToken(res.data.token);
     setUser(res.data.user);
-    localStorage.setItem('token', res.data.token); // Store JWT in localStorage
     setLoading(false);
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token'); // Remove JWT from localStorage
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser, setToken }}>
       {children}
     </AuthContext.Provider>
   );

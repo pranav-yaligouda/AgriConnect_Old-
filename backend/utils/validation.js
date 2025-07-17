@@ -59,13 +59,21 @@ const userSchemas = {
       street: Joi.string().max(200).allow(''),
       district: Joi.string().max(100).required(),
       state: Joi.string().max(100).required(),
-      zipcode: Joi.string().pattern(/^\d{6}$/).allow('')
+      zipcode: Joi.string().pattern(/^[0-9]{6}$/).allow('')
     }).optional(),
     
     username: Joi.string()
       .pattern(patterns.username)
       .optional()
-      .messages(messages)
+      .messages(messages),
+
+    phoneVerified: Joi.boolean()
+      .valid(true)
+      .required()
+      .messages({
+        'any.only': 'Phone verification is required before registration.',
+        'any.required': 'Phone verification is required before registration.'
+      })
   }),
 
   login: Joi.object({

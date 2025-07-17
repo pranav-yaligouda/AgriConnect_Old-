@@ -22,6 +22,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import api from '../utils/axiosConfig';
 import type { ApiResponse } from './interfaces';
 import { useTranslation } from 'react-i18next';
+import { useNotification } from '../contexts/NotificationContext';
 
 interface LoginFormValues {
   password: string;
@@ -30,6 +31,7 @@ interface LoginFormValues {
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { notify } = useNotification();
 
   // —————————————————————————————
   // Phone-Auth & Reset-Password state
@@ -50,16 +52,21 @@ const Login: React.FC = () => {
   // —————————————————————————————
   // Check if phone exists on server
   // —————————————————————————————
+  const formatPhone = (input: string) => {
+    const digits = input.replace(/\D/g, '').slice(-10);
+    return '+91' + digits;
+  };
+
   const checkUserExists = async (phone: string) => {
     if (loadingPhoneCheck) return;
     setLoadingPhoneCheck(true);
-
     try {
-      const res = await api.post<ApiResponse>('/users/check-phone', { phone });
+      const formattedPhone = formatPhone(phone);
+      const res = await api.post<ApiResponse>('/users/check-phone', { phone: formattedPhone });
       setIsRegistered(Boolean(res.data.exists));
     } catch (err: any) {
       setIsRegistered(null);
-      toast.error(err.message || t('login.error'));
+      notify(err.message || t('login.error'), 'error');
     } finally {
       setLoadingPhoneCheck(false);
     }
@@ -67,8 +74,9 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    if (/^\+91\d{10}$/.test(phoneNumber)) {
-      timeout = setTimeout(() => checkUserExists(phoneNumber), 350);
+    const formatted = formatPhone(phoneNumber);
+    if (/^\+91\d{10}$/.test(formatted)) {
+      timeout = setTimeout(() => checkUserExists(formatted), 350);
     } else {
       setIsRegistered(null);
     }
@@ -95,19 +103,19 @@ const Login: React.FC = () => {
         if (res.data.token) {
           localStorage.setItem('token', res.data.token);
           api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-          toast.success(t('login.success'));
+          notify(t('login.success'), 'success');
           setTimeout(() => navigate('/profile', { replace: true }), 300);
         } else {
-          toast.error(t('login.error'));
+          notify(t('login.error'), 'error');
           helpers.setFieldError('password', t('login.invalidCredentials'));
         }
       } catch (err: any) {
         helpers.setSubmitting(false);
         if (err.response?.status === 401) {
           helpers.setFieldError('password', t('login.invalidCredentials'));
-          toast.error(t('login.invalidCredentials'));
+          notify(t('login.invalidCredentials'), 'error');
         } else {
-          toast.error(err.message || t('login.error'));
+          notify(err.message || t('login.error'), 'error');
         }
       } finally {
         helpers.setSubmitting(false);
@@ -135,7 +143,7 @@ const Login: React.FC = () => {
     // ⇒ Sync to your backend:
     const idToken = await user.getIdToken();
     await resetPassword({ phone: phoneNumber, newPassword, idToken });
-      toast.success(t('login.passwordResetSuccess'));
+      notify(t('login.passwordResetSuccess'), 'success');
       await auth.signOut();
       navigate('/login');
     } catch (err: any) {
@@ -157,12 +165,11 @@ const Login: React.FC = () => {
             label={t('login.phone')}
             value={phoneNumber.replace(/^\+91/, '')}
             onChange={e => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-              setPhoneNumber('+91' + digits);
+              setPhoneNumber(formatPhone(e.target.value));
             }}
             InputProps={{ startAdornment: <InputAdornment position="start">+91</InputAdornment> }}
-            error={!!phoneNumber && !/^\+91\d{10}$/.test(phoneNumber)}
-            helperText={!!phoneNumber && !/^\+91\d{10}$/.test(phoneNumber) ? t('login.invalidPhone') : ''}
+            error={!!phoneNumber && !/^\+91\d{10}$/.test(formatPhone(phoneNumber))}
+            helperText={!!phoneNumber && !/^\+91\d{10}$/.test(formatPhone(phoneNumber)) ? t('login.invalidPhone') : ''}
             sx={{ mb: 2 }}
           />
 
@@ -181,7 +188,7 @@ const Login: React.FC = () => {
           )}
 
           {/* OTP Flow (Sign-up or Reset) */}
-          {isRegistered === false && /^\+91\d{10}$/.test(phoneNumber) && (
+          {isRegistered === false && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !resetMode && !loadingPhoneCheck && (
             <PhoneAuth
               phoneNumber={phoneNumber}
               onVerify={() => navigate('/register', {
@@ -191,7 +198,7 @@ const Login: React.FC = () => {
           )}
 
           {/* Password Login */}
-          {isRegistered === true && /^\+91\d{10}$/.test(phoneNumber) && !resetMode && (
+          {isRegistered === true && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !resetMode && !loadingPhoneCheck && (
             <Box component="form" onSubmit={formik.handleSubmit} width="100%">
               <TextField
                 fullWidth
@@ -220,7 +227,7 @@ const Login: React.FC = () => {
           )}
 
           {/* Forgot-Password Link */}
-          {isRegistered === true && !resetMode && /^\+91\d{10}$/.test(phoneNumber) && (
+          {isRegistered === true && !resetMode && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !loadingPhoneCheck && (
             <Typography
               sx={{ mt: 2, cursor: 'pointer' }}
               color="primary"
@@ -231,7 +238,7 @@ const Login: React.FC = () => {
           )}
 
           {/* OTP Flow for Reset */}
-          {resetMode && /^\+91\d{10}$/.test(phoneNumber) && (
+          {resetMode && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && (
             <PhoneAuth
               phoneNumber={phoneNumber}
               onVerify={() => {

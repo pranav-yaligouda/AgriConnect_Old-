@@ -10,6 +10,11 @@ const { generateUniqueUsername } = require('../utils/username');
 
 const ADMIN_USER_AGENT = 'YOUR_IPHONE_SE_USER_AGENT_STRING'; // Replace with your actual iPhone SE user-agent
 
+// Utility to normalize phone numbers (India)
+function normalizePhone(phone) {
+  return phone.replace(/\D/g, '').slice(-10);
+}
+
 // Register a new user
 const register = async (req, res) => {
   try {
@@ -19,12 +24,29 @@ const register = async (req, res) => {
         error: 'req.body is undefined or not an object. Ensure Content-Type: application/json and valid JSON body.'
       });
     }
-    let { username, name, email, password, role, address, phone } = req.body || {};
+    let { username, name, email, password, role, address, phone, phoneVerified } = req.body || {};
+
+    // Enforce phone verification (must be true/flagged by OTP flow)
+    if (!phoneVerified) {
+      return res.status(400).json({
+        message: 'Phone verification required',
+        details: { phone: 'You must verify your phone number before registering.' }
+      });
+    }
+
+    // Always lowercase username if provided
+    if (username) username = username.toLowerCase();
 
     // Auto-generate username if not provided
     if (!username && name) {
       username = await generateUniqueUsername(name);
     }
+
+    // Lowercase username in request body for Joi validation
+    req.body.username = username;
+
+    // Normalize phone for storage and lookup
+    phone = normalizePhone(phone);
 
     // Joi validation for registration (robust, enterprise-grade)
     const { error } = userSchemas.register.validate(req.body, { abortEarly: false });
@@ -47,9 +69,9 @@ const register = async (req, res) => {
     const existingUser = await User.findOne({ phone: { $eq: phone } });
     if (existingUser) {
       return res.status(400).json({
-        message: 'User already exists',
+        message: 'Registration failed',
         details: {
-          phone: 'This phone number is already registered'
+          phone: 'This phone number is already in use.'
         }
       });
     }
@@ -59,34 +81,48 @@ const register = async (req, res) => {
       if (typeof email !== 'string') {
         return res.status(400).json({ message: 'Invalid email' });
       }
-      const emailUser = await User.findOne({ email: { $eq: email } });
+      const emailUser = await User.findOne({ email: { $eq: email.toLowerCase() } });
       if (emailUser) {
         return res.status(400).json({
-          message: 'User already exists',
+          message: 'Registration failed',
           details: {
-            email: 'This email is already registered'
+            email: 'This email is already in use.'
           }
         });
       }
     }
 
-
-
-    // Create new user
-    const user = new User({
+    // Create new user, handle duplicate username race condition
+    let user;
+    let attempts = 0;
+    while (attempts < 3) {
+      try {
+        user = new User({
       username,
       name,
       email,
       password,
       role,
       address,
-      phone,
-      // Remove base64 profileImages logic
-      // profileImages: req.body.profileImages && Array.isArray(req.body.profileImages) && req.body.profileImages.length > 0 ? req.body.profileImages.slice(0, 1) : undefined
+      phone, // always normalized
       profileImageUrl: req.body.profileImageUrl || null
     });
-
     await user.save();
+        break; // Success
+      } catch (err) {
+        // Duplicate username error (race condition)
+        if (err.code === 11000 && err.keyPattern && err.keyPattern.username) {
+          username = await generateUniqueUsername(name);
+          req.body.username = username;
+          attempts++;
+        } else {
+          throw err;
+        }
+      }
+    }
+    if (!user) {
+      return res.status(500).json({ message: 'Could not generate a unique username. Please try again.' });
+    }
 
     // Check for JWT secret
     if (!process.env.JWT_SECRET) {
@@ -101,7 +137,6 @@ const register = async (req, res) => {
 
     // Always return both profileImages (array) and profileImage (string, first image or null)
     const userObj = user.toObject ? user.toObject() : user;
-    
     delete userObj.password;
     res.status(201).json({
       user: userObj,
@@ -109,24 +144,20 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = {};
       Object.keys(error.errors).forEach(key => {
         validationErrors[key] = error.errors[key].message;
       });
-
       return res.status(400).json({
         message: 'Validation failed',
         details: validationErrors
       });
     }
-
+    // Generic error message for user enumeration protection
     res.status(500).json({
-      message: 'Error creating user',
-      error: error.message,
-      details: error.errors
+      message: 'Registration failed. Please try again later.'
     });
   }
 };
@@ -158,8 +189,13 @@ const login = async (req, res) => {
     if (typeof email !== 'string' && typeof phone !== 'string') {
       return res.status(400).json({ message: 'Invalid input' });
     }
+    // Normalize phone for lookup
+    let normalizedPhone = phone;
+    if (typeof phone === 'string') {
+      normalizedPhone = normalizePhone(phone);
+    }
     const user = await User.findOne(
-      email ? { email: { $eq: email } } : { phone: { $eq: phone } }
+      email ? { email: { $eq: email } } : { phone: { $eq: normalizedPhone } }
     );
     if (!user) {
       return res.status(401).json({
@@ -216,11 +252,13 @@ const login = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
-    const { phone, newPassword, idToken } = req.body;
+    let { phone, newPassword, idToken } = req.body;
+    // Normalize phone for lookup
+    phone = normalizePhone(phone);
 
     // 1. Verify Firebase ID token to ensure OTP just happened
     const decoded = await admin.auth().verifyIdToken(idToken);
-    if (decoded.phone_number !== phone) {
+    if (normalizePhone(decoded.phone_number) !== phone) {
       return res.status(403).json({ message: 'Phone mismatch' });
     }
 
@@ -245,7 +283,8 @@ exports.checkPhone = async (req, res) => {
     if (!phone || typeof phone !== 'string') {
       return res.status(400).json({ exists: false, message: "Phone number is required and must be a string" });
     }
-    const user = await require('../models/User').findOne({ phone: { $eq: phone } });
+    const normalizedPhone = normalizePhone(phone);
+    const user = await require('../models/User').findOne({ phone: { $eq: normalizedPhone } });
     res.json({ exists: !!user });
   } catch (error) {
     res.status(500).json({ exists: false, message: error.message });
@@ -392,7 +431,8 @@ const checkPhone = async (req, res) => {
     if (!phone || typeof phone !== 'string') {
       return res.status(400).json({ exists: false, message: "Phone number is required and must be a string" });
     }
-    const user = await User.findOne({ phone: { $eq: phone } });
+    const normalizedPhone = normalizePhone(phone);
+    const user = await User.findOne({ phone: { $eq: normalizedPhone } });
     res.json({ exists: !!user });
   } catch (error) {
     res.status(500).json({ exists: false, message: error.message });
@@ -406,19 +446,32 @@ const generateUsername = async (req, res) => {
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ message: 'Name is required' });
     }
-    // Basic username: lowercase, remove non-alphanumeric, replace spaces with dot
-    let base = name.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/ +/g, '.');
-    if (!base) base = 'user';
-    let username = base;
-    let counter = 0;
-    // Check for uniqueness
-    while (await User.findOne({ username })) {
-      counter++;
-      username = `${base}${counter}`;
-    }
+    const username = await generateUniqueUsername(name);
     return res.json({ username });
   } catch (error) {
-    res.status(500).json({ message: 'Error declining request', error: error.message });
+    res.status(500).json({ message: 'Error generating username. Please try again.' });
+  }
+};
+
+// POST /api/users/check-username
+const checkUsername = async (req, res) => {
+  try {
+    let { username } = req.body;
+    if (!username || typeof username !== 'string') {
+      return res.json({ available: false, message: 'Invalid username format' });
+    }
+    username = username.toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+      return res.json({ available: false, message: 'Invalid username format' });
+    }
+    const exists = await User.findOne({ username: { $eq: username } });
+    // Harden error message for enumeration
+    if (exists) {
+      return res.json({ available: false, message: 'Username is not available.' });
+    }
+    res.json({ available: true });
+  } catch (error) {
+    res.status(500).json({ available: false, message: 'Error checking username. Please try again.' });
   }
 };
 
@@ -477,5 +530,6 @@ module.exports = {
   deleteAccount,
   generateUsername,
   checkPhone,
-  uploadProfileImage, // Export the new handler
+  uploadProfileImage,
+  checkUsername,
 };

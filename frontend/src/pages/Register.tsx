@@ -1,53 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Container,
   Box,
   Typography,
-  TextField,
   Button,
-  Grid,
-  Link,
   Paper,
-  InputAdornment,
-  IconButton,
-  Stepper,
-  Step,
-  StepLabel,
   Stack,
-  FormControl,
-  FormControlLabel,
-  RadioGroup,
-  Radio,
-  useTheme,
-  InputLabel,
-  Select,
-  MenuItem,
 } from '@mui/material';
-import {
-  Person,
-  Email,
-  Lock,
-  Phone,
-  LocationOn,
-  Visibility,
-  VisibilityOff,
-  ArrowBack,
-  ArrowForward,
-} from '@mui/icons-material';
+import { ArrowBack } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
 import type { RegisterUserPayload, RegisterAddress, RegisterResponse } from '../types/api';
-import { registerUser, generateUsername } from '../services/apiService';
-
+import { registerUser, generateUsername, checkUsername } from '../services/apiService';
 import { useTranslation } from 'react-i18next';
 import { stateDistricts } from '../data/stateDistricts';
 import enGeo from '../locales/en/geo.json';
 import hiGeo from '../locales/hi/geo.json';
 import knGeo from '../locales/kn/geo.json';
 import mrGeo from '../locales/mr/geo.json';
+import RegisterStepper from '../components/register/RegisterStepper';
+import AccountTypeStep from '../components/register/AccountTypeStep';
+import PersonalDetailsStep from '../components/register/PersonalDetailsStep';
+import LocationStep from '../components/register/LocationStep';
+import FinishStep from '../components/register/FinishStep';
+import PasswordStrengthBar from '../components/register/PasswordStrengthBar';
+import { useNotification } from '../contexts/NotificationContext';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/axiosConfig';
 
 const roleOptions = [
   { value: 'farmer', label: 'Farmer (Sell your produce)' },
@@ -55,7 +37,12 @@ const roleOptions = [
   { value: 'user', label: 'Consumer (Buy for personal use)' },
 ];
 
-const steps = ['Account Type', 'Personal Details', 'Location', 'Finish'];
+const steps = [
+  'register.accountType',
+  'register.personalDetails',
+  'register.location',
+  'register.finish',
+];
 
 const geoMap: any = {
   en: enGeo,
@@ -64,56 +51,61 @@ const geoMap: any = {
   mr: mrGeo,
 };
 
-// Password strength bar component
-function PasswordStrengthBar({ password }: { password: string }) {
-  const getStrength = (pwd: string) => {
-    if (!pwd) return 0;
-    let score = 0;
-    if (pwd.length >= 6) score++;
-    if (/[A-Za-z]/.test(pwd)) score++;
-    if (/\d/.test(pwd)) score++;
-    if (/[^A-Za-z0-9]/.test(pwd)) score++;
-    return score;
-  };
-  const strength = getStrength(password);
-  const colors = ['#eee', '#f44336', '#ff9800', '#ffeb3b', '#4caf50'];
-  const labels = ['','Weak','Fair','Good','Strong'];
-  return (
-    <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', mt: 1 }}>
-      <Box component="span" sx={{ width: 80, height: 8, bgcolor: colors[strength], borderRadius: 2, mr: 1, display: 'inline-block' }} />
-      <Typography component="span" variant="caption" color={strength < 2 ? 'error' : strength < 4 ? 'warning.main' : 'success.main'}>
-        {labels[strength]}
-      </Typography>
-    </Box>
-  );
-}
-
 const Register = () => {
-  const queryClient = useQueryClient();
+  const { notify } = useNotification();
+  const [activeStep, setActiveStep] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [usernameLoading, setUsernameLoading] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const lastCheckedUsername = useRef('');
+  const usernameCheckTimeout = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t, i18n } = useTranslation();
+  const geo = geoMap[i18n.language] || enGeo;
+  const [usernameMode, setUsernameMode] = useState<'auto' | 'manual'>('auto');
+  const { setToken } = useAuth();
+
+  // Restrict direct access to register page and enforce phone verification
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const state = location.state;
+    const isFromLogin = state && state.fromLogin === true;
+    const isFromOTP = state && !!state.phone && state.fromOTP === true;
+    // Only allow access if redirected from OTP verification with a phone number
+    if (!(isFromLogin && isFromOTP)) {
+      notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your number.'), 'error');
+      navigate('/login', { replace: true });
+      return;
+    }
+    // Optionally, check if phone is already registered (extra security)
+    // If phone is not present, block registration
+    if (!isFromOTP || !state.phone) {
+      notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your phone number.'), 'error');
+      navigate('/login', { replace: true });
+    }
+  }, [navigate, location.state, notify, t]);
 
   // Registration mutation
   const registerMutation = useMutation<RegisterResponse, any, RegisterUserPayload>({
     mutationFn: registerUser,
-    onSuccess: (data) => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', data.token);
-      }
-      toast.success('Registration successful!');
-      setTimeout(() => {
-        navigate('/profile');
-      }, 100);
+    onSuccess: async (data) => {
+      setToken(data.token);
+      notify(t('register.success'), 'success');
+      navigate('/');
     },
     onError: (error: any) => {
       if (error?.message) {
-        toast.error(error.message || 'Registration failed');
+        notify(error.message || t('register.error'), 'error');
       }
       if (error?.details) {
-        Object.values(error.details).forEach((msg: any) => toast.error(String(msg)));
+        Object.values(error?.details).forEach((msg: any) => notify(String(msg), 'error'));
       }
     },
   });
 
-  // Username generation mutation
+  // Username generation mutation (always use backend)
   const generateUsernameMutation = useMutation<{ username: string }, any, string>({
     mutationFn: generateUsername,
     onMutate: () => setUsernameLoading(true),
@@ -122,51 +114,16 @@ const Register = () => {
       setUsernameLoading(false);
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Username generation failed');
+      notify(error?.message || t('register.usernameGenError'), 'error');
       setUsernameLoading(false);
     },
   });
-  const theme = useTheme();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Restrict direct access to register page
-// Accept both fromLogin and from OTP
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  const state = location.state;
-  const isFromLogin = state && state.fromLogin === true;
-  const isFromOTP = state && !!state.phone;
-  if (!isFromLogin && !isFromOTP) {
-    if (token) {
-      navigate('/profile', { replace: true });
-    } else {
-      navigate('/login', { replace: true });
-    }
-  }
-}, [navigate, location.state]);
-
-  const [activeStep, setActiveStep] = useState(0);
-  const [phoneFromOTP, setPhoneFromOTP] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (location.state && location.state.phone) {
-      setPhoneFromOTP(location.state.phone);
-      formik.setFieldValue('phone', location.state.phone);
-    }
-    // eslint-disable-next-line
-  }, [location.state]);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [usernameLoading, setUsernameLoading] = useState(false);
-  const { t, i18n } = useTranslation();
-  const geo = geoMap[i18n.language] || enGeo;
 
   const formik = useFormik({
     validateOnMount: true,
     initialValues: {
       role: 'user',
-      username: '', // Username is required by backend
+      username: '',
       name: '',
       email: '',
       phone: '',
@@ -183,14 +140,16 @@ useEffect(() => {
         .matches(/^[a-zA-Z0-9_]+$/, t('register.validation.usernamePattern'))
         .required(t('register.validation.usernameRequired')),
       name: Yup.string().required(t('register.validation.nameRequired')),
-      email: Yup.string()
-        .email(t('register.validation.invalidEmail')),
+      email: Yup.string().email(t('register.validation.invalidEmail')),
       phone: Yup.string()
         .matches(/^\+?\d{10,15}$/, t('register.validation.phoneInvalid'))
         .required(t('register.validation.phoneRequired')),
       password: Yup.string()
         .min(7, t('register.validation.passwordMinLength', 'Password must be at least 7 characters'))
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{7,}$/, t('register.validation.passwordPattern', 'Password must contain at least one uppercase letter, one lowercase letter, and one digit. Symbols are allowed.'))
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{7,}$/,
+          t('register.validation.passwordPattern', 'Password must contain at least one uppercase letter, one lowercase letter, and one digit. Symbols are allowed.')
+        )
         .required(t('register.validation.passwordRequired')),
       confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], t('register.validation.passwordsMustMatch'))
@@ -200,55 +159,52 @@ useEffect(() => {
       state: Yup.string().required(t('register.validation.stateRequired')),
       zipcode: Yup.string(),
     }),
-    onSubmit: async (values, { setSubmitting }) => {
-      console.log('Register form submitted', values);
+    onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
-        // Auto-generate username if not provided
         let username = values.username;
-        if (!username || username.trim() === "") {
-          // Use React Query mutation for username generation
+        if (!username || username.trim() === '') {
+          // Always use backend for username generation
           const { username: generatedUsername } = await generateUsernameMutation.mutateAsync(values.name);
           username = generatedUsername;
         }
-        // Use canonical types from types/api.ts
+        // Always lowercase username before submission
+        username = username.toLowerCase();
         const address: RegisterAddress = {
           district: values.district,
           state: values.state,
         };
-        if (values.street && values.street.trim() !== "") {
+        if (values.street && values.street.trim() !== '') {
           address.street = values.street;
         }
-        if (values.zipcode && values.zipcode.trim() !== "") {
+        if (values.zipcode && values.zipcode.trim() !== '') {
           address.zipcode = values.zipcode;
         }
-        // Always strip +91 if present before sending to backend
         const cleanPhone = values.phone.startsWith('+91') ? values.phone.slice(3) : values.phone;
-        const reqBody: RegisterUserPayload = {
+        // Add phoneVerified flag for backend enforcement
+        const reqBody: RegisterUserPayload & { phoneVerified: boolean } = {
           username: username,
           name: values.name,
           password: values.password,
-          role: values.role,
+          role: values.role as 'user' | 'farmer' | 'vendor',
           phone: cleanPhone,
           address,
+          phoneVerified: true,
         };
         if (values.email) reqBody.email = values.email;
-        // Debug: Log the registration body
-        console.log('Register API body:', reqBody);
-        // Use React Query mutation for registration
         registerMutation.mutate(reqBody);
       } catch (error: any) {
         let message = error?.message || t('register.error');
         const errorDetails = error?.details;
         if (errorDetails) {
           Object.keys(errorDetails).forEach(field => {
-            if (field === 'username' && errorDetails[field].code === 'USERNAME_EXISTS') {
-              formik.setFieldError('username', 'USERNAME_EXISTS');
+            if (field === 'username') {
+              setFieldError('username', t('register.usernameExists', 'Username already exists. Please choose another.'));
             } else {
-              formik.setFieldError(field, errorDetails[field].message);
+              setFieldError(field, errorDetails[field]);
             }
           });
         } else {
-          toast.error(message);
+          notify(message, 'error');
         }
       } finally {
         setSubmitting(false);
@@ -257,45 +213,124 @@ useEffect(() => {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/profile');
+    if (location.state && location.state.phone) {
+      formik.setFieldValue('phone', location.state.phone);
     }
-  }, [navigate]);
+  }, [location.state]);
 
-  // Auto-generate username when name changes
-  useEffect(() => {
-    const generateUsername = async () => {
-      const name = formik.values.name;
-      if (!name || name.length < 2) return;
-      // Local username generation (mirrors backend logic):
-      let base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
-      base = base.replace(/_+/g, '_'); // collapse multiple underscores
-      base = base.replace(/^_+|_+$/g, ''); // trim underscores
-      if (!base) base = 'user';
-      let username = base;
-      // Optionally, you can still call the backend for uniqueness if needed
-
-      // if (response.data && response.data.username) {
-      //   username = response.data.username;
-      // }
-      formik.setFieldValue('username', username);
-    };
-    generateUsername();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.name]);
+  // Remove profile redirect effect
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const roleParam = params.get('role');
     if (roleParam && roleOptions.find(option => option.value === roleParam)) {
-      formik.setFieldValue('role', roleParam);
+      formik.setFieldValue('role', roleParam as 'user' | 'farmer' | 'vendor');
     }
   }, [location.search]);
 
+  useEffect(() => {
+    const selectedState = formik.values.state;
+    if (selectedState && stateDistricts[selectedState]) {
+      if (!stateDistricts[selectedState].includes(formik.values.district)) {
+        formik.setFieldValue('district', '');
+      }
+    } else {
+      formik.setFieldValue('district', '');
+    }
+  }, [formik.values.state]);
+
+  // Auto-generate username on name change (if username untouched and in auto mode)
+  useEffect(() => {
+    if (usernameMode !== 'auto') return;
+    if (!formik.values.name) return;
+    setUsernameLoading(true);
+    if (usernameCheckTimeout.current) clearTimeout(usernameCheckTimeout.current);
+    usernameCheckTimeout.current = setTimeout(async () => {
+      try {
+        const { username } = await generateUsername(formik.values.name);
+        formik.setFieldValue('username', username, false);
+        setUsernameAvailable(true);
+      } catch (e) {
+        setUsernameAvailable(false);
+      } finally {
+        setUsernameLoading(false);
+      }
+    }, 400);
+    // eslint-disable-next-line
+  }, [formik.values.name, usernameMode]);
+
+  // Lowercase username on manual input
+  useEffect(() => {
+    if (usernameMode !== 'manual') return;
+    if (!formik.values.username) return;
+    const lower = formik.values.username.toLowerCase();
+    if (formik.values.username !== lower) {
+      formik.setFieldValue('username', lower, false);
+    }
+    // eslint-disable-next-line
+  }, [formik.values.username, usernameMode]);
+
+  // Check username uniqueness on manual input (only in manual mode)
+  useEffect(() => {
+    if (usernameMode !== 'manual') return;
+    if (!formik.values.username) {
+      setUsernameAvailable(null);
+      return;
+    }
+    // Validate username format before checking availability
+    const validPattern = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!validPattern.test(formik.values.username)) {
+      setUsernameAvailable(null);
+      formik.setFieldError('username', t('register.validation.usernamePattern', 'Invalid username format.'));
+      return;
+    }
+    if (formik.values.username === lastCheckedUsername.current) return;
+    setUsernameLoading(true);
+    if (usernameCheckTimeout.current) clearTimeout(usernameCheckTimeout.current);
+    usernameCheckTimeout.current = setTimeout(async () => {
+      try {
+        const { available } = await checkUsername(formik.values.username);
+        setUsernameAvailable(available);
+        if (!available) formik.setFieldError('username', t('register.usernameExists', 'Username already exists.'));
+        else formik.setFieldError('username', undefined);
+        lastCheckedUsername.current = formik.values.username;
+      } catch (e) {
+        setUsernameAvailable(false);
+        formik.setFieldError('username', t('register.validation.usernamePattern', 'Invalid username format.'));
+      } finally {
+        setUsernameLoading(false);
+      }
+    }, 400);
+    // eslint-disable-next-line
+  }, [formik.values.username, usernameMode]);
+
+  // When switching to auto mode, clear username and trigger auto-generation
+  useEffect(() => {
+    if (usernameMode === 'auto') {
+      formik.setFieldValue('username', '', false);
+      setUsernameAvailable(null);
+    }
+    // eslint-disable-next-line
+  }, [usernameMode]);
+
+  // Helper to get English key from translated district
+  const getEnglishDistrict = (stateKey: string, translatedDistrict: string) => {
+    const enDistricts = (enGeo.districts as Record<string, string[]>)[stateKey] || [];
+    const currentDistricts = (geo.districts as Record<string, string[]>)[stateKey] || [];
+    const idx = currentDistricts.indexOf(translatedDistrict);
+    return idx !== -1 ? enDistricts[idx] : translatedDistrict;
+  };
+
+  // Helper to get the translated district from the English key
+  const getTranslatedDistrict = (stateKey: string, englishDistrict: string) => {
+    const enDistricts = (enGeo.districts as Record<string, string[]>)[stateKey] || [];
+    const currentDistricts = (geo.districts as Record<string, string[]>)[stateKey] || [];
+    const idx = enDistricts.indexOf(englishDistrict);
+    return idx !== -1 ? currentDistricts[idx] : englishDistrict;
+  };
+
   const handleNext = () => {
     let canProceed = false;
-
     if (activeStep === 0) {
       canProceed = Boolean(formik.values.role) && !formik.errors.role;
     } else if (activeStep === 1) {
@@ -310,7 +345,7 @@ useEffect(() => {
           !formik.errors.phone &&
           !formik.errors.password &&
           !formik.errors.confirmPassword
-        ); // email is NOT required
+      );
     } else if (activeStep === 2) {
       canProceed = Boolean(
         formik.values.district &&
@@ -319,9 +354,7 @@ useEffect(() => {
         !formik.errors.state
       );
     }
-
     if (canProceed) {
-      // Mark all current step fields as touched before proceeding
       let fieldsToTouch: string[] = [];
       if (activeStep === 0) {
         fieldsToTouch = ['role'];
@@ -357,384 +390,75 @@ useEffect(() => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleClickShowConfirmPassword = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
-  useEffect(() => {
-    const selectedState = formik.values.state;
-    if (selectedState && stateDistricts[selectedState]) {
-      // No need to set availableDistricts in state, just reset district if not valid
-      if (!stateDistricts[selectedState].includes(formik.values.district)) {
-        formik.setFieldValue('district', '');
-      }
-    } else {
-      formik.setFieldValue('district', '');
+  const handleUsernameSuggest = async () => {
+    if (!formik.values.name) {
+      notify(t('register.validation.nameRequired'), 'error');
+      return;
     }
-  }, [formik.values.state]);
-
-  // Helper to get English key from translated district
-  const getEnglishDistrict = (stateKey: keyof typeof enGeo.districts, translatedDistrict: string) => {
-    const enDistricts = enGeo.districts[stateKey] || [];
-    const currentDistricts = geo.districts[stateKey] || [];
-    const idx = currentDistricts.indexOf(translatedDistrict);
-    return idx !== -1 ? enDistricts[idx] : translatedDistrict;
+    setUsernameLoading(true);
+    try {
+      const { username } = await generateUsernameMutation.mutateAsync(formik.values.name);
+      formik.setFieldValue('username', username);
+    } catch (err: any) {
+      notify(err?.message || t('register.usernameGenError'), 'error');
+    } finally {
+      setUsernameLoading(false);
+    }
   };
-
-  // Add this helper to get the translated district from the English key
-  const getTranslatedDistrict = (stateKey: keyof typeof geo.districts, englishDistrict: string) => {
-    const enDistricts = (enGeo.districts as Record<string, string[]>)[stateKey as string] || [];
-    const currentDistricts = (geo.districts as Record<string, string[]>)[stateKey as string] || [];
-    const idx = enDistricts.indexOf(englishDistrict);
-    return idx !== -1 ? currentDistricts[idx] : englishDistrict;
-  };
-
-  // For availableDistricts, use English keys for value, translated for label
-  const availableDistricts = formik.values.state && (enGeo.districts as Record<string, string[]>)[formik.values.state] ? (enGeo.districts as Record<string, string[]>)[formik.values.state] : [];
-
-  // In the JSX, before the return, compute the translated selected district:
-  const selectedDistrictTranslated =
-    formik.values.state && formik.values.district
-      ? getTranslatedDistrict(formik.values.state as keyof typeof geo.districts, formik.values.district)
-      : '';
 
   return (
+    <ErrorBoundary>
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: { xs: 3, sm: 5 }, borderRadius: 2 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Typography component="h1" variant="h4" sx={{ mb: 4, fontWeight: 600 }}>
             {t('register.title')}
           </Typography>
-
-          <Stepper activeStep={activeStep} alternativeLabel sx={{ width: '100%', mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
+            <RegisterStepper steps={steps} activeStep={activeStep} />
           <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: '100%' }}>
             {activeStep === 0 && (
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  {t('register.accountType')}
-                </Typography>
-                <FormControl component="fieldset" sx={{ width: '100%', mt: 2 }}>
-                  <RadioGroup
-                    name="role"
-                    value={formik.values.role}
-                    onChange={formik.handleChange}
-                  >
-                    {roleOptions.map((option) => (
-                      <FormControlLabel
-                        key={option.value}
-                        value={option.value}
-                        control={<Radio />}
-                        label={<Typography variant="body1">{option.label}</Typography>}
-                        sx={{
-                          mb: 2,
-                          p: 2,
-                          border: 1,
-                          borderColor: formik.values.role === option.value ? 'primary.main' : 'divider',
-                          borderRadius: 1,
-                          width: '100%',
-                        }}
-                      />
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-              </Box>
-            )}
-
+                <AccountTypeStep
+                  role={formik.values.role}
+                  setRole={(role) => formik.setFieldValue('role', role)}
+                  error={formik.errors.role as string}
+                  touched={formik.touched.role}
+                  roleOptions={roleOptions}
+                />
+              )}
             {activeStep === 1 && (
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="username"
-                    name="username"
-                    label={t('register.username')}
-                    value={formik.values.username}
-                    onChange={async (e) => {
-                      formik.handleChange(e);
-                      // Suggest username if field is empty and name is filled
-                      if (e.target.value === '' && formik.values.name) {
-                        setUsernameLoading(true);
-                        try {
-                          const resp = await api.post<{ username: string }>('/users/generate-username', { name: formik.values.name });
-                          formik.setFieldValue('username', resp.data.username);
-                        } catch (err) {}
-                        setUsernameLoading(false);
-                      }
-                    }}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.username && Boolean(formik.errors.username)}
-                    helperText={
-                      (formik.touched.username && formik.errors.username)
-                        ? formik.errors.username
-                        : usernameLoading
-                          ? t('register.usernameLoading')
-                          : t('register.usernameHelper')
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Button
-                            onClick={async () => {
-                              setUsernameLoading(true);
-                              try {
-                                // Use centralized api instance instead of axios
-                                const resp = await api.post<{ username: string }>('/users/generate-username', { name: formik.values.name });
-                                formik.setFieldValue('username', resp.data.username);
-                              } catch (err) {}
-                              setUsernameLoading(false);
-                            }}
-                            size="small"
-                            variant="outlined"
-                            sx={{ ml: 1 }}
-                          >
-                            {t('register.suggestUsername')}
-                          </Button>
-                        </InputAdornment>
-                      )
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    id="name"
-                    name="name"
-                    label={t('register.name')}
-                    value={formik.values.name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.name && Boolean(formik.errors.name)}
-                    helperText={formik.touched.name && formik.errors.name}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="email"
-                    name="email"
-                    label={`${t('register.email')} (${t('register.optional', 'optional')})`}
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.email && Boolean(formik.errors.email)}
-                    helperText={
-                      formik.touched.email && formik.errors.email
-                        ? formik.errors.email
-                        : t('register.emailOptionalHelper', 'Email is optional. You can leave this blank if you prefer to register with just your phone number.')
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Email />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="password"
-                    name="password"
-                    label={t('register.password')}
-                    type={showPassword ? 'text' : 'password'}
-                    value={formik.values.password}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.password && Boolean(formik.errors.password)}
-                    helperText={
-                      (formik.touched.password && formik.errors.password) ? formik.errors.password : (
-                        <span>
-                          {t('register.passwordHelper')}<br/>
-                          <Box component="span" sx={{ display: 'inline-block' }}>
-                            <PasswordStrengthBar password={formik.values.password} />
-                          </Box>
-                        </span>
-                      )
-                    }
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Lock />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleClickShowPassword}
-                            edge="end"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    label={t('register.confirmPassword')}
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={formik.values.confirmPassword}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                    helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Lock color="action" />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            aria-label="toggle confirm password visibility"
-                            onClick={handleClickShowConfirmPassword}
-                            edge="end"
-                          >
-                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            )}
-
+                <PersonalDetailsStep
+                  values={formik.values}
+                  errors={formik.errors}
+                  touched={formik.touched}
+                  handleChange={formik.handleChange}
+                  handleBlur={formik.handleBlur}
+                  handleUsernameSuggest={handleUsernameSuggest}
+                  usernameLoading={usernameLoading}
+                  usernameAvailable={usernameAvailable}
+                  usernameMode={usernameMode}
+                  setUsernameMode={setUsernameMode}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  showConfirmPassword={showConfirmPassword}
+                  setShowConfirmPassword={setShowConfirmPassword}
+                  PasswordStrengthBar={PasswordStrengthBar}
+                />
+              )}
             {activeStep === 2 && (
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    id="street"
-                    name="street"
-                    label={t('register.talukVillage', 'Taluk/Village')}
-                    value={formik.values.street}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.street && Boolean(formik.errors.street)}
-                    helperText={formik.touched.street && formik.errors.street}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LocationOn color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <FormControl fullWidth required>
-                    <InputLabel id="register-state-select-label">{t('register.state')}</InputLabel>
-                    <Select
-                      labelId="register-state-select-label"
-                      id="register-state-select"
-                      name="state"
-                      value={formik.values.state}
-                      label={t('register.state')}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched.state && Boolean(formik.errors.state)}
-                    >
-                      {Object.keys(enGeo.states).map((state) => (
-                        <MenuItem key={state} value={state}>{geo.states[state]}</MenuItem>
-                      ))}
-                    </Select>
-                    {formik.touched.state && formik.errors.state && (
-                      <Typography variant="caption" color="error">{formik.errors.state}</Typography>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth required>
-                    <InputLabel id="register-district-select-label">{t('register.district')}</InputLabel>
-                    <Select
-                      labelId="register-district-select-label"
-                      id="register-district-select"
-                      name="district"
-                      value={selectedDistrictTranslated}
-                      label={t('register.district')}
-                      onChange={(e) => {
-                        // Always store the English key in formik
-                        const selectedTranslated = e.target.value;
-                        const englishDistrict = getEnglishDistrict(formik.values.state as keyof typeof enGeo.districts, selectedTranslated);
-                        formik.setFieldValue('district', englishDistrict);
-                      }}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched.district && Boolean(formik.errors.district)}
-                      disabled={!formik.values.state}
-                    >
-                      {(geo.districts[formik.values.state as keyof typeof geo.districts] || []).map((district: string) => (
-                        <MenuItem key={district} value={district}>{district}</MenuItem>
-                      ))}
-                    </Select>
-                    {formik.touched.district && formik.errors.district && (
-                      <Typography variant="caption" color="error">{formik.errors.district}</Typography>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    fullWidth
-                    id="zipcode"
-                    name="zipcode"
-                    label={t('register.zipcode')}
-                    value={formik.values.zipcode}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.zipcode && Boolean(formik.errors.zipcode)}
-                    helperText={formik.touched.zipcode && formik.errors.zipcode}
-                  />
-                </Grid>
-              </Grid>
-            )}
-
-            {activeStep === 3 && (
-              <Box sx={{ textAlign: 'center', mt: 4 }}>
-                <Typography variant="h6" gutterBottom>
-                  {t('register.readyToCreateAccount')}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {t('register.clickRegisterToCompleteRegistration')}
-                </Typography>
-              </Box>
-            )}
-
+                <LocationStep
+                  values={formik.values}
+                  errors={formik.errors}
+                  touched={formik.touched}
+                  handleChange={formik.handleChange}
+                  handleBlur={formik.handleBlur}
+                  setFieldValue={formik.setFieldValue}
+                  geo={geo}
+                  enGeo={enGeo}
+                  getEnglishDistrict={getEnglishDistrict}
+                  getTranslatedDistrict={getTranslatedDistrict}
+                />
+              )}
+              {activeStep === 3 && <FinishStep />}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 4 }}>
               {activeStep > 0 && (
                 <Button
@@ -762,7 +486,8 @@ useEffect(() => {
                       !!formik.errors.email ||
                       !formik.values.phone || !!formik.errors.phone ||
                       !formik.values.password || !!formik.errors.password ||
-                      !formik.values.confirmPassword || !!formik.errors.confirmPassword
+                      !formik.values.confirmPassword || !!formik.errors.confirmPassword ||
+                      (usernameMode === 'manual' && usernameAvailable === false)
                     )) ||
                     (activeStep === 2 && (
                       !formik.values.district || !!formik.errors.district ||
@@ -781,18 +506,18 @@ useEffect(() => {
               </Button>
             </Stack>
           </Box>
-
           <Box sx={{ mt: 4 }}>
             <Typography variant="body2">
               {t('register.alreadyHaveAnAccount')}{' '}
-              <Link component={RouterLink} to="/login">
+                <Button component={RouterLink} to="/login">
                 {t('register.loginHere')}
-              </Link>
+                </Button>
             </Typography>
           </Box>
         </Box>
       </Paper>
     </Container>
+    </ErrorBoundary>
   );
 };
 

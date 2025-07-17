@@ -36,34 +36,48 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
       const { status, data } = error.response;
-      
       if (status === 401) {
-        // Handle unauthorized access
+        // --- GLOBAL 401 HANDLER: ENTERPRISE-GRADE ---
+        // Remove all authentication/session data
         localStorage.removeItem('token');
+        sessionStorage.clear(); // Clear all session data (including any phone verification, etc.)
+        // Optionally, trigger a global logout event for context-aware logout
+        try {
+          window.dispatchEvent(new Event('agriconnect-logout'));
+        } catch {}
+        // Redirect to login page
         window.location.href = '/login';
       }
-      
       return Promise.reject({
         message: data.message || 'An error occurred',
         details: data.details,
         status: status
       });
     } else if (error.request) {
-      // The request was made but no response was received
       return Promise.reject({
         message: 'No response received from server',
         status: 0
       });
     } else {
-      // Something happened in setting up the request that triggered an Error
       return Promise.reject({
         message: error.message || 'An error occurred',
         status: 0
       });
     }
+  }
+);
+
+// Global 401 handler: log out and redirect on authentication error
+instance.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      // Optionally, clear other sensitive data or context here
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
 );
 
