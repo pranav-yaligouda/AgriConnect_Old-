@@ -161,6 +161,11 @@ const Login: React.FC = () => {
     }
   };
 
+  const { clearNotifications } = useNotification();
+  useEffect(() => {
+    clearNotifications();
+  }, [clearNotifications]);
+
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: { xs: 3, sm: 5 }, borderRadius: 2 }}>

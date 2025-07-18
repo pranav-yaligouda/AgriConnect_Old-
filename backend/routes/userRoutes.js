@@ -19,45 +19,16 @@ const multer = require('multer');
 const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } }); // 2MB limit
 const { profileImageStorage } = require('../utils/cloudinary');
 const upload = multer({ storage: profileImageStorage, limits: { fileSize: 2 * 1024 * 1024 } }); // 2MB limit
-const rateLimit = require('express-rate-limit');
+const { auth: authLimiter, general: generalLimiter } = require('../middleware/security');
 
-// Rate limiter for username endpoints
-const usernameLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 requests per minute
-  message: { message: 'Too many requests. Please try again later.' }
-});
-
-const registerLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10,
-  message: { message: 'Too many registration attempts. Please try again later.' }
-});
-const loginLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-  message: { message: 'Too many login attempts. Please try again later.' }
-});
-const resetPasswordLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 5,
-  message: { message: 'Too many password reset attempts. Please try again later.' }
-});
-const checkPhoneLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 20,
-  message: { message: 'Too many phone checks. Please try again later.' }
-});
-
-// Public routes
-router.post('/register', registerLimiter, register);
-router.post('/login', loginLimiter, login);
-router.post('/reset-password', resetPasswordLimiter, resetPassword);
-router.post('/generate-username', usernameLimiter, generateUsername);
-router.post('/check-username', usernameLimiter, checkUsername);
-router.post('/check-phone', checkPhoneLimiter, checkPhone);
-router.post('/send-email-otp', sendEmailOtp);
-router.post('/verify-email-otp', verifyEmailOtp);
+router.post('/register', authLimiter, register);
+router.post('/login', authLimiter, login);
+router.post('/reset-password', authLimiter, resetPassword);
+router.post('/generate-username', generalLimiter, generateUsername);
+router.post('/check-username', generalLimiter, checkUsername);
+router.post('/check-phone', generalLimiter, checkPhone);
+router.post('/send-email-otp', authLimiter, sendEmailOtp);
+router.post('/verify-email-otp', authLimiter, verifyEmailOtp);
 
 // Protected routes
 router.get('/profile', auth, getProfile);

@@ -10,7 +10,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 // Import basic security middleware (simplified for now)
-const rateLimit = require('express-rate-limit');
+const { general: generalLimiter } = require('./middleware/security');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 
@@ -81,13 +81,6 @@ app.use(helmet({
 // Logging
 app.use(morgan(isDev ? 'dev' : 'combined'));
 
-// Basic rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again after 15 minutes'
-});
-
 // Performance monitoring
 app.use(requestMonitor);
 
@@ -97,7 +90,7 @@ app.use(requestMonitor);
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
 // Rate limiting
-app.use('/api', limiter);
+app.use('/api', generalLimiter);
 
 // CORS configuration
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim());

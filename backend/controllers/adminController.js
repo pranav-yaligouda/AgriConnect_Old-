@@ -14,7 +14,7 @@ const VALID_STATUSES = ['pending', 'accepted', 'completed', 'disputed', 'expired
 
 // List all users (admin only) with pagination, filtering, and search
 async function getAllUsers(req, res) {
-  const { page = 1, limit = 20, search, role } = req.query;
+  const { page, limit, search, role } = req.query;
   const query = {};
   if (role && VALID_ROLES.includes(role)) query.role = role;
   if (search && typeof search === 'string' && search.length < 100) {
@@ -36,7 +36,7 @@ async function getAllUsers(req, res) {
 
 // List all products (admin only) with pagination, filtering, and search
 async function getAllProducts(req, res) {
-  const { page = 1, limit = 20, search, farmer } = req.query;
+  const { page, limit, search, farmer } = req.query;
   const query = {};
   if (farmer && mongoose.Types.ObjectId.isValid(farmer)) query.farmer = farmer;
   if (search && typeof search === 'string' && search.length < 100) {
@@ -56,10 +56,15 @@ async function getAllProducts(req, res) {
 
 // Change user role (admin only) with validation and audit logging
 async function changeUserRole(req, res) {
-  const { userId, role } = req.body;
-  if (!VALID_ROLES.includes(role)) {
-    return res.status(400).json({ message: 'Invalid role' });
+  const schema = Joi.object({
+    userId: Joi.string().length(24).hex().required(),
+    role: Joi.string().valid(...VALID_ROLES).required()
+  });
+  const { error, value } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: 'Invalid input', details: error.details });
   }
+  const { userId, role } = value;
   if (userId === req.user._id.toString() && role !== 'admin') {
     return res.status(400).json({ message: 'Admins cannot demote themselves' });
   }

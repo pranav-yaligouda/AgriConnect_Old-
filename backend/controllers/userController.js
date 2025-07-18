@@ -329,7 +329,7 @@ const updateProfile = async (req, res) => {
     updates.forEach(update => {
       if (update === 'address') {
         user.address = { ...user.address, ...req.body.address };
-      } else if (update !== 'profileImageUrl') {
+      } else if (update !== 'profileImageUrl' && !dangerousKeys.includes(update)) {
         user[update] = req.body[update];
       }
     });
@@ -556,6 +556,9 @@ const verifyEmailOtp = async (req, res) => {
   record.verified = true;
   res.json({ verified: true });
 };
+
+// Add a helper to check for dangerous keys
+const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
 
 module.exports = {
   register,

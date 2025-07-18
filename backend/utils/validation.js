@@ -391,6 +391,31 @@ const adminSchemas = {
   changeUserRole: Joi.object({
     userId: Joi.string().pattern(patterns.objectId).required().messages(messages),
     role: Joi.string().valid('user', 'farmer', 'vendor', 'admin').required().messages(messages)
+  }),
+  userQuery: Joi.object({
+    page: Joi.number().integer().min(1).max(10000).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
+    search: Joi.string().max(100),
+    role: Joi.string().valid('user', 'farmer', 'vendor', 'admin')
+  }),
+  productQuery: Joi.object({
+    page: Joi.number().integer().min(1).max(10000).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
+    search: Joi.string().max(100),
+    farmer: Joi.string().length(24).hex()
+  }),
+  contactRequestQuery: Joi.object({
+    page: Joi.number().integer().min(1).max(10000).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
+    status: Joi.string().valid('pending', 'accepted', 'completed', 'disputed', 'expired', 'rejected'),
+    search: Joi.string().max(100)
+  })
+};
+
+// Email validation schemas
+const emailSchemas = {
+  sendMessage: Joi.object({
+    message: Joi.string().min(1).max(2000).required().messages(messages)
   })
 };
 
@@ -469,6 +494,7 @@ module.exports = {
   productSchemas,
   contactRequestSchemas,
   adminSchemas,
+  emailSchemas,
   validate,
   validateQuery,
   validateObjectId,

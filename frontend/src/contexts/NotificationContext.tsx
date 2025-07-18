@@ -12,10 +12,15 @@ export const NotificationProvider: React.FC<{children: React.ReactNode}> = ({ ch
     setOpen(true);
   };
 
+  const clearNotifications = () => {
+    setOpen(false);
+    setNotification(null);
+  };
+
   const handleClose = () => setOpen(false);
 
   return (
-    <NotificationContext.Provider value={{ notify }}>
+    <NotificationContext.Provider value={{ notify, clearNotifications }}>
       {children}
       <Snackbar open={open} autoHideDuration={4000} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert onClose={handleClose} severity={notification?.severity || 'info'} sx={{ width: '100%' }}>

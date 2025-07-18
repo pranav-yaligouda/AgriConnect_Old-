@@ -398,7 +398,7 @@ exports.adminResolveDispute = [authorize('admin'), async (req, res) => {
 // Get all contact requests (admin only)
 exports.getAllContactRequests = [require('../middleware/auth').authorize('admin'), async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, search } = req.query;
+    const { page, limit, status, search } = req.query;
     const query = {};
     if (status && VALID_STATUSES.includes(status)) query.status = status;
     if (search && typeof search === 'string' && search.length < 100) {

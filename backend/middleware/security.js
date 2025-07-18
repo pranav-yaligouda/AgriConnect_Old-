@@ -10,7 +10,7 @@ const createRateLimiters = () => {
   // General API rate limiter
   const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : 100,
     message: {
       error: 'Too many requests from this IP, please try again after 15 minutes',
       retryAfter: 15 * 60
@@ -76,6 +76,8 @@ const createRateLimiters = () => {
     speed: speedLimiter
   };
 };
+
+const rateLimiters = createRateLimiters();
 
 // Input validation and sanitization middleware
 const inputValidation = (req, res, next) => {
@@ -250,7 +252,7 @@ const securityLogging = (req, res, next) => {
 };
 
 module.exports = {
-  createRateLimiters,
+  ...rateLimiters,
   inputValidation,
   requestSizeValidation,
   securityHeaders,

@@ -74,6 +74,7 @@ const Register = () => {
   const [emailOtpLoading, setEmailOtpLoading] = useState(false);
   const [emailOtpError, setEmailOtpError] = useState('');
   const [registerButtonClicked, setRegisterButtonClicked] = useState(false);
+  const [allowRender, setAllowRender] = useState(false);
 
   // Restrict direct access to register page and enforce phone verification
   useEffect(() => {
@@ -81,18 +82,17 @@ const Register = () => {
     const state = location.state;
     const isFromLogin = state && state.fromLogin === true;
     const isFromOTP = state && !!state.phone && state.fromOTP === true;
-    // Only allow access if redirected from OTP verification with a phone number
     if (!(isFromLogin && isFromOTP)) {
       notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your number.'), 'error');
       navigate('/login', { replace: true });
       return;
     }
-    // Optionally, check if phone is already registered (extra security)
-    // If phone is not present, block registration
     if (!isFromOTP || !state.phone) {
       notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your phone number.'), 'error');
       navigate('/login', { replace: true });
+      return;
     }
+    setAllowRender(true);
   }, [navigate, location.state, notify, t]);
 
   // Registration mutation
@@ -454,6 +454,8 @@ const Register = () => {
       setEmailOtpLoading(false);
     }
   };
+
+  if (!allowRender) return null;
 
   return (
     <ErrorBoundary>

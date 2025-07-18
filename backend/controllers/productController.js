@@ -1,5 +1,5 @@
 const Product = require('../models/Product');
-const { validateProduct, productSchema } = require('../utils/productValidation');
+// Validation is now handled by centralized middleware
 const productNames = require('../config/productNames');
 const { fileTypeFromBuffer } = require('file-type');
 const cloudinary = require('../utils/cloudinary');
@@ -17,14 +17,6 @@ const createProduct = async (req, res) => {
         return res.status(400).json({ message: 'Invalid location format' });
       }
     }
-    // Validate product data (except images)
-    const { error } = validateProduct(req.body);
-    if (error) {
-      return res.status(400).json({
-        message: 'Invalid product data',
-        details: error.details
-      });
-    }
     // --- Robust image validation ---
     const files = req.files;
     if (!files || files.length === 0) {
@@ -40,21 +32,12 @@ const createProduct = async (req, res) => {
         return res.status(400).json({ message: 'File buffer missing.' });
       }
       const fileType = await fileTypeFromBuffer(file.buffer);
-      if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
-        return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
+      if (!fileType || !['image/jpeg', 'image/png', 'image/webp'].includes(fileType.mime)) {
+        return res.status(400).json({ message: 'Invalid image file type. Only JPEG, PNG, and WEBP are allowed.' });
       }
       // Upload to Cloudinary
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { resource_type: 'image', folder: 'agriconnect/product_images' },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          }
-        );
-        stream.end(file.buffer);
-      });
-      imageUrls.push(uploadResult.secure_url);
+      const result = await cloudinary.uploader.upload_stream_to_cloudinary(file.buffer);
+      imageUrls.push(result.secure_url);
     }
     // --- Create product only if all images are valid and uploaded ---
     const product = new Product({
@@ -74,27 +57,12 @@ const createProduct = async (req, res) => {
 // Get all products with optional filters
 const getProducts = async (req, res) => {
   try {
-    console.log('Received query params:', req.query);
-    const { 
-      category, 
-      minPrice, 
-      maxPrice, 
-      district, 
-      state, 
-      search, 
-      isOrganic,
-      sort,
-      page = 1,
-      limit = 20,
-      name
-    } = req.query;
-
     const query = {};
 
     // Category filter (supports multiple categories)
-    if (category) {
+    if (req.query.category) {
       // Defensive: handle array or comma-separated string, and ignore 'all' and empty
-      let catArr = Array.isArray(category) ? category : category.split(',');
+      let catArr = Array.isArray(req.query.category) ? req.query.category : req.query.category.split(',');
       catArr = catArr.filter(c => c && c !== 'all');
       if (catArr.length > 0) {
         query.category = { $in: catArr };
@@ -102,34 +70,34 @@ const getProducts = async (req, res) => {
     }
 
     // Filter by product name key
-    if (name) {
-      query.name = name;
+    if (req.query.name) {
+      query.name = req.query.name;
     }
 
     // Price range filter
-    if (minPrice || maxPrice) {
+    if (req.query.minPrice || req.query.maxPrice) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (req.query.minPrice) query.price.$gte = Number(req.query.minPrice);
+      if (req.query.maxPrice) query.price.$lte = Number(req.query.maxPrice);
     }
 
     // Text search filter
-    if (search) {
-      query.$text = { $search: search };
+    if (req.query.search) {
+      query.$text = { $search: req.query.search };
     }
 
     // Location filters
-    if (district) query["location.district"] = district;
-    if (state) query["location.state"] = state;
+    if (req.query.district) query["location.district"] = req.query.district;
+    if (req.query.state) query["location.state"] = req.query.state;
 
     // Modify the organic filter handling:
-    if (typeof isOrganic !== 'undefined') {
-     query.isOrganic = isOrganic === 'true';
+    if (typeof req.query.isOrganic !== 'undefined') {
+     query.isOrganic = req.query.isOrganic === 'true';
     }
 
     // Sorting logic
     const sortOptions = {};
-    switch(sort) {
+    switch(req.query.sort) {
       case 'price-asc':
         sortOptions.price = 1;
         break;
@@ -144,8 +112,8 @@ const getProducts = async (req, res) => {
     }
 
     // Pagination
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.max(1, Math.min(100, parseInt(limit))); // max 100 per page
+    const pageNum = Math.max(1, parseInt(req.query.page) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20)); // max 100 per page
     const skip = (pageNum - 1) * limitNum;
 
     // Fetch products and total count in parallel
@@ -236,11 +204,6 @@ const updateProduct = async (req, res) => {
     });
     if (!product) {
       return res.status(404).json({ message: 'Product not found or unauthorized' });
-    }
-    // FIX: Correct validation call
-    const { error } = validateProduct(req.body);
-    if (error) {
-      return res.status(400).json({ message: 'Invalid product data', details: error.details });
     }
     Object.assign(product, req.body);
     if (typeof req.body.minimumOrderQuantity !== 'undefined') {

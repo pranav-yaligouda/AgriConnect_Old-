@@ -9,6 +9,7 @@ const User = require('../models/User');
  * @returns {Promise<string>} unique username
  */
 async function generateUniqueUsername(name) {
+  if (typeof name !== 'string' || name.length > 50) name = 'user';
   let base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
   base = base.replace(/_+/g, '_').replace(/^_+|_+$/g, '');
   if (!base) base = 'user';
@@ -21,6 +22,7 @@ async function generateUniqueUsername(name) {
     counter++;
     // Ensure total length ≤ 20
     uniqueUsername = `${base.slice(0, 20 - String(counter).length - 1)}_${counter}`;
+    if (uniqueUsername.length > 30) uniqueUsername = uniqueUsername.slice(0, 30);
   }
   return uniqueUsername;
 }
