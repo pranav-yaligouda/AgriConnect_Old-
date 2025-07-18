@@ -74,7 +74,6 @@ const Register = () => {
   const [emailOtpLoading, setEmailOtpLoading] = useState(false);
   const [emailOtpError, setEmailOtpError] = useState('');
   const [registerButtonClicked, setRegisterButtonClicked] = useState(false);
-  const registerButtonRef = useRef(false);
 
   // Restrict direct access to register page and enforce phone verification
   useEffect(() => {
@@ -174,9 +173,6 @@ const Register = () => {
       zipcode: Yup.string(),
     }),
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
-      if (registerButtonRef.current) return; // Prevent double submit
-      registerButtonRef.current = true;
-      setRegisterButtonClicked(true);
       try {
         if (!idToken) {
           notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your phone number.'), 'error');
@@ -213,8 +209,10 @@ const Register = () => {
           idToken,
         };
         if (values.email) reqBody.email = values.email;
+        setRegisterButtonClicked(true); // Move here, just before sending request
         registerMutation.mutate(reqBody);
       } catch (error: any) {
+        setRegisterButtonClicked(false);
         let message = error?.message || t('register.error');
         const errorDetails = error?.details;
         if (errorDetails) {
@@ -230,8 +228,6 @@ const Register = () => {
         }
       } finally {
         setSubmitting(false);
-        registerButtonRef.current = false;
-        setRegisterButtonClicked(false);
       }
     },
   });
@@ -543,7 +539,6 @@ const Register = () => {
                 disabled={
                   formik.isSubmitting ||
                   registerButtonClicked ||
-                  registerButtonRef.current ||
                   (
                     (activeStep === 0 && (!formik.values.role || !!formik.errors.role)) ||
                     (activeStep === 1 && (
@@ -565,7 +560,11 @@ const Register = () => {
                 }
                 onClick={activeStep !== steps.length - 1 ? handleNext : undefined}
               >
-                {activeStep === steps.length - 1 ? t('register.registerButton') : t('register.nextButton')}
+                {activeStep === steps.length - 1
+                  ? (registerButtonClicked || formik.isSubmitting
+                      ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" style={{ marginRight: 8 }}></span>{t('register.registerButton')}</span>
+                      : t('register.registerButton'))
+                  : t('register.nextButton')}
               </Button>
             </Stack>
           </Box>
