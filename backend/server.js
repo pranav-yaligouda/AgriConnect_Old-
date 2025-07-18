@@ -29,10 +29,10 @@ const notFoundHandler = (req, res) => {
 
 // Basic health check
 const healthCheck = (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
-    uptime: process.uptime(), 
-    timestamp: Date.now() 
+  res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: Date.now()
   });
 };
 
@@ -165,7 +165,6 @@ const contactRequestRoutes = require('./routes/contactRequestRoutes');
 app.use('/api/contact-requests', contactRequestRoutes);
 
 
-
 // 404 handler for unknown API routes
 app.all(/^\/api(\/|$)/, notFoundHandler);
 
@@ -208,7 +207,7 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   process.exit(1);
 }
 
-const maxRequests = config.getAsNumber('RATE_LIMIT_MAX') || 
+const maxRequests = config.getAsNumber('RATE_LIMIT_MAX') ||
   (config.get('NODE_ENV') === 'development' ? 10000 : 100);
 
 // Start server

@@ -396,6 +396,17 @@ export async function checkUsername(username: string): Promise<{ available: bool
   }
 }
 
+// ---- Email OTP ----
+export async function sendEmailOtp(email: string): Promise<{ success: boolean }> {
+  const res = await api.post('/users/send-email-otp', { email });
+  return res.data;
+}
+
+export async function verifyEmailOtp(email: string, otp: string): Promise<{ verified: boolean }> {
+  const res = await api.post('/users/verify-email-otp', { email, otp });
+  return res.data;
+}
+
 // ---- Utility: Robust error normalization ----
 function normalizeApiError(error: any) {
   // Handles axios and native errors gracefully

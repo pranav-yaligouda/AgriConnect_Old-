@@ -9,6 +9,10 @@ const { userSchemas } = require('../utils/validation');
 const { generateUniqueUsername } = require('../utils/username');
 const { normalizePhone } = require('../utils/phone');
 const { signJwt } = require('../utils/jwt');
+const nodemailer = require('nodemailer');
+
+// In-memory store for OTPs (for dev/demo; use Redis or DB for prod)
+const emailOtps = {};
 
 const ADMIN_USER_AGENT = 'YOUR_IPHONE_SE_USER_AGENT_STRING'; // Replace with your actual iPhone SE user-agent
 
@@ -83,6 +87,13 @@ const register = async (req, res) => {
           details: { email: 'This email is already in use.' }
         });
       }
+      // Check email OTP verification
+      const otpRecord = emailOtps[email.toLowerCase()];
+      if (!otpRecord || !otpRecord.verified) {
+        return res.status(400).json({
+          message: 'Email not verified. Please verify your email with OTP before registering.'
+        });
+      }
     }
     let user;
     let attempts = 0;
@@ -96,7 +107,8 @@ const register = async (req, res) => {
           role,
           address,
           phone,
-          profileImageUrl: req.body.profileImageUrl || null
+          profileImageUrl: req.body.profileImageUrl || null,
+          emailVerified: !!(email && emailOtps[email.toLowerCase()] && emailOtps[email.toLowerCase()].verified)
         });
         await user.save();
         break;
@@ -497,6 +509,54 @@ const uploadProfileImage = async (req, res) => {
   }
 };
 
+// Send OTP to email
+const sendEmailOtp = async (req, res) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ message: 'Valid email required' });
+  }
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Store OTP with expiry (5 min)
+  emailOtps[email.toLowerCase()] = { otp, expires: Date.now() + 5 * 60 * 1000 };
+  // Send email
+  try {
+    const transporter = nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    await transporter.sendMail({
+      from: `AgriConnect <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'AgriConnect Email Verification OTP',
+      text: `Your OTP for AgriConnect email verification is: ${otp}`,
+      html: `<p>Your OTP for AgriConnect email verification is: <b>${otp}</b></p>`
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Email OTP send error:', err);
+    res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
+  }
+};
+
+// Verify OTP for email
+const verifyEmailOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res.status(400).json({ message: 'Email and OTP required' });
+  }
+  const record = emailOtps[email.toLowerCase()];
+  if (!record || record.otp !== otp || Date.now() > record.expires) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+  // Mark as verified for this session (could be persisted or handled in registration logic)
+  record.verified = true;
+  res.json({ verified: true });
+};
+
 module.exports = {
   register,
   login,
@@ -509,4 +569,6 @@ module.exports = {
   checkPhone,
   uploadProfileImage,
   checkUsername,
+  sendEmailOtp,
+  verifyEmailOtp
 };

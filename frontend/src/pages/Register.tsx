@@ -13,7 +13,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RegisterUserPayload, RegisterAddress, RegisterResponse } from '../types/api';
-import { registerUser, generateUsername, checkUsername } from '../services/apiService';
+import { registerUser, generateUsername, checkUsername, sendEmailOtp, verifyEmailOtp } from '../services/apiService';
 import { useTranslation } from 'react-i18next';
 import { stateDistricts } from '../data/stateDistricts';
 import enGeo from '../locales/en/geo.json';
@@ -68,6 +68,13 @@ const Register = () => {
   const [usernameMode, setUsernameMode] = useState<'auto' | 'manual'>('auto');
   const { setToken } = useAuth();
   const idToken = location.state?.idToken;
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpVerified, setEmailOtpVerified] = useState(false);
+  const [emailOtpLoading, setEmailOtpLoading] = useState(false);
+  const [emailOtpError, setEmailOtpError] = useState('');
+  const [registerButtonClicked, setRegisterButtonClicked] = useState(false);
+  const registerButtonRef = useRef(false);
 
   // Restrict direct access to register page and enforce phone verification
   useEffect(() => {
@@ -167,6 +174,9 @@ const Register = () => {
       zipcode: Yup.string(),
     }),
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
+      if (registerButtonRef.current) return; // Prevent double submit
+      registerButtonRef.current = true;
+      setRegisterButtonClicked(true);
       try {
         if (!idToken) {
           notify(t('register.phoneVerificationRequired', 'Phone verification required. Please verify your phone number.'), 'error');
@@ -220,6 +230,8 @@ const Register = () => {
         }
       } finally {
         setSubmitting(false);
+        registerButtonRef.current = false;
+        setRegisterButtonClicked(false);
       }
     },
   });
@@ -418,6 +430,35 @@ const Register = () => {
     }
   };
 
+  const handleSendEmailOtp = async () => {
+    setEmailOtpLoading(true);
+    setEmailOtpError('');
+    try {
+      await sendEmailOtp(formik.values.email);
+      setEmailOtpSent(true);
+      notify(t('register.emailOtpSent', 'OTP sent to your email.'), 'success');
+    } catch (err: any) {
+      setEmailOtpError(err?.message || t('register.emailOtpSendError', 'Failed to send OTP.'));
+    } finally {
+      setEmailOtpLoading(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async () => {
+    setEmailOtpLoading(true);
+    setEmailOtpError('');
+    try {
+      await verifyEmailOtp(formik.values.email, emailOtp);
+      setEmailOtpVerified(true);
+      notify(t('register.emailOtpVerified', 'Email verified!'), 'success');
+    } catch (err: any) {
+      setEmailOtpError(err?.message || t('register.emailOtpVerifyError', 'Invalid or expired OTP.'));
+      setEmailOtpVerified(false);
+    } finally {
+      setEmailOtpLoading(false);
+    }
+  };
+
   return (
     <ErrorBoundary>
     <Container maxWidth="md" sx={{ py: 8 }}>
@@ -454,6 +495,17 @@ const Register = () => {
                   showConfirmPassword={showConfirmPassword}
                   setShowConfirmPassword={setShowConfirmPassword}
                   PasswordStrengthBar={PasswordStrengthBar}
+                  // Email OTP props
+                  emailOtpSent={emailOtpSent}
+                  setEmailOtpSent={setEmailOtpSent}
+                  emailOtp={emailOtp}
+                  setEmailOtp={setEmailOtp}
+                  emailOtpVerified={emailOtpVerified}
+                  setEmailOtpVerified={setEmailOtpVerified}
+                  emailOtpLoading={emailOtpLoading}
+                  emailOtpError={emailOtpError}
+                  handleSendEmailOtp={handleSendEmailOtp}
+                  handleVerifyEmailOtp={handleVerifyEmailOtp}
                 />
               )}
             {activeStep === 2 && (
@@ -490,6 +542,8 @@ const Register = () => {
                 type={activeStep === steps.length - 1 ? 'submit' : 'button'}
                 disabled={
                   formik.isSubmitting ||
+                  registerButtonClicked ||
+                  registerButtonRef.current ||
                   (
                     (activeStep === 0 && (!formik.values.role || !!formik.errors.role)) ||
                     (activeStep === 1 && (
@@ -499,7 +553,8 @@ const Register = () => {
                       !formik.values.phone || !!formik.errors.phone ||
                       !formik.values.password || !!formik.errors.password ||
                       !formik.values.confirmPassword || !!formik.errors.confirmPassword ||
-                      (usernameMode === 'manual' && usernameAvailable === false)
+                      (usernameMode === 'manual' && usernameAvailable === false) ||
+                      (formik.values.email && !emailOtpVerified)
                     )) ||
                     (activeStep === 2 && (
                       !formik.values.district || !!formik.errors.district ||
@@ -508,11 +563,7 @@ const Register = () => {
                     (activeStep === 3 && !(formik.isValid && formik.dirty))
                   )
                 }
-                onClick={() => {
-                  if (activeStep !== steps.length - 1) {
-                    handleNext();
-                  }
-                }}
+                onClick={activeStep !== steps.length - 1 ? handleNext : undefined}
               >
                 {activeStep === steps.length - 1 ? t('register.registerButton') : t('register.nextButton')}
               </Button>

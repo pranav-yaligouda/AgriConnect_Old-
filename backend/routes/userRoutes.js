@@ -11,7 +11,9 @@ const {
     generateUsername,
     checkPhone,
     uploadProfileImage,
-    checkUsername } = require('../controllers/userController');
+    checkUsername,
+    sendEmailOtp,
+    verifyEmailOtp } = require('../controllers/userController');
 const { auth, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } }); // 2MB limit
@@ -54,6 +56,8 @@ router.post('/reset-password', resetPasswordLimiter, resetPassword);
 router.post('/generate-username', usernameLimiter, generateUsername);
 router.post('/check-username', usernameLimiter, checkUsername);
 router.post('/check-phone', checkPhoneLimiter, checkPhone);
+router.post('/send-email-otp', sendEmailOtp);
+router.post('/verify-email-otp', verifyEmailOtp);
 
 // Protected routes
 router.get('/profile', auth, getProfile);

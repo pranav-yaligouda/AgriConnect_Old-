@@ -20,6 +20,17 @@ interface PersonalDetailsStepProps {
   PasswordStrengthBar: React.FC<{ password: string }>;
   usernameMode: 'auto' | 'manual';
   setUsernameMode: (mode: 'auto' | 'manual') => void;
+  // Email OTP props
+  emailOtpSent: boolean;
+  setEmailOtpSent: (v: boolean) => void;
+  emailOtp: string;
+  setEmailOtp: (v: string) => void;
+  emailOtpVerified: boolean;
+  setEmailOtpVerified: (v: boolean) => void;
+  emailOtpLoading: boolean;
+  emailOtpError: string;
+  handleSendEmailOtp: () => void;
+  handleVerifyEmailOtp: () => void;
 }
 
 const PersonalDetailsStep = ({
@@ -37,6 +48,16 @@ const PersonalDetailsStep = ({
   PasswordStrengthBar,
   usernameMode,
   setUsernameMode,
+  emailOtpSent,
+  setEmailOtpSent,
+  emailOtp,
+  setEmailOtp,
+  emailOtpVerified,
+  setEmailOtpVerified,
+  emailOtpLoading,
+  emailOtpError,
+  handleSendEmailOtp,
+  handleVerifyEmailOtp,
 }: PersonalDetailsStepProps) => {
   const { t } = useTranslation();
   useNotification(); // for future error display
@@ -170,7 +191,12 @@ const PersonalDetailsStep = ({
           name="email"
           label={`${t('register.email')} (${t('register.optional', 'optional')})`}
           value={values.email}
-          onChange={handleChange}
+          onChange={e => {
+            handleChange(e);
+            setEmailOtpSent(false);
+            setEmailOtpVerified(false);
+            setEmailOtp('');
+          }}
           onBlur={handleBlur}
           error={touched.email && Boolean(errors.email)}
           helperText={touched.email && errors.email ? errors.email : ''}
@@ -180,8 +206,47 @@ const PersonalDetailsStep = ({
                 <Email />
               </InputAdornment>
             ),
+            endAdornment: (
+              values.email && !emailOtpVerified && (
+                <InputAdornment position="end">
+                  <Button
+                    size="small"
+                    onClick={handleSendEmailOtp}
+                    disabled={emailOtpLoading || emailOtpSent}
+                  >
+                    {emailOtpSent ? t('register.otpSent', 'OTP Sent') : t('register.sendOtp', 'Send OTP')}
+                  </Button>
+                </InputAdornment>
+              )
+            )
           }}
         />
+        {values.email && emailOtpSent && !emailOtpVerified && (
+          <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+            <TextField
+              size="small"
+              label={t('register.enterOtp', 'Enter OTP')}
+              value={emailOtp}
+              onChange={e => setEmailOtp(e.target.value)}
+              sx={{ mr: 1 }}
+              disabled={emailOtpLoading}
+            />
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleVerifyEmailOtp}
+              disabled={emailOtpLoading || !emailOtp}
+            >
+              {t('register.verify', 'Verify')}
+            </Button>
+            {emailOtpLoading && <span style={{ marginLeft: 8 }}>{t('register.loading', 'Loading...')}</span>}
+            {emailOtpVerified && <span style={{ color: 'green', marginLeft: 8 }}>{t('register.verified', 'Verified!')}</span>}
+            {emailOtpError && <span style={{ color: 'red', marginLeft: 8 }}>{emailOtpError}</span>}
+          </Box>
+        )}
+        {values.email && emailOtpVerified && (
+          <Box sx={{ mt: 1, color: 'green' }}>{t('register.verified', 'Email verified!')}</Box>
+        )}
       </Grid>
       <Grid item xs={12} md={6}>
         <TextField
