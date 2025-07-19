@@ -38,16 +38,16 @@ instance.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       if (status === 401) {
-        // --- GLOBAL 401 HANDLER: ENTERPRISE-GRADE ---
-        // Remove all authentication/session data
         localStorage.removeItem('token');
-        sessionStorage.clear(); // Clear all session data (including any phone verification, etc.)
-        // Optionally, trigger a global logout event for context-aware logout
+        sessionStorage.clear();
         try {
           window.dispatchEvent(new Event('agriconnect-logout'));
         } catch {}
-        // Redirect to login page
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/register') {
+          window.location.href = '/login';
+        }
       }
       return Promise.reject({
         message: data.message || 'An error occurred',

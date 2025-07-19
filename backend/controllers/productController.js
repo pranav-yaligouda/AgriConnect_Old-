@@ -139,6 +139,10 @@ const getProducts = async (req, res) => {
       case 'newest':
         sortOptions.createdAt = -1;
         break;
+      case 'featured':
+        sortOptions.rating = -1;
+        sortOptions.createdAt = -1;
+        break;
       default:
         sortOptions.createdAt = -1;
     }

@@ -51,6 +51,9 @@ const requestMonitor = (req, res, next) => {
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for rate limiting behind load balancers
+app.set('trust proxy', 1);
+
 // Access environment variables using config
 const port = config.get('PORT');
 const jwtSecret = config.get('JWT_SECRET');
