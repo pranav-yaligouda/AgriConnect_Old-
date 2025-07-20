@@ -37,7 +37,6 @@ import {
   Group,
   Forum,
   
-  // Chat as ChatIcon
 } from "@mui/icons-material";
 import AgricultureIcon from "@mui/icons-material/Agriculture";
 import LanguageSwitcher from "../LanguageSwitcher";
