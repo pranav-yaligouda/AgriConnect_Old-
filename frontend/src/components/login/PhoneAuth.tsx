@@ -251,7 +251,7 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ phoneNumber, onVerify }) => {
               {otp.map((digit, index) => (
                 <TextField
                   key={index}
-                  ref={(el) => inputRefs.current[index] = el}
+                  inputRef={el => inputRefs.current[index] = el}
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onFocus={() => handleInputFocus(index)}
