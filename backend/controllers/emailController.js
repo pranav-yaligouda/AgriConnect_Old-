@@ -27,7 +27,7 @@ exports.sendMessage = [
         to: 'connect.agriconnect@gmail.com',
         subject: 'New Message from AgriConnect User',
         text: `A new message was submitted on About page:\n\n${message}\n\nTime: ${new Date().toISOString()}`,
-        html: `<h2>New Message from AgriConnect User</h2><p><b>Message:</b></p><pre>${message}</pre><p><b>Time:</b> ${new Date().toISOString()}</p>`
+        html: `<h2>New Message from AgriConnect User</h2><p><b>Message:</b></p><pre>${escapeHtml(message)}</pre><p><b>Time:</b> ${new Date().toISOString()}</p>`
       };
 
       await transporter.sendMail(mailOptions);
@@ -38,3 +38,12 @@ exports.sendMessage = [
     }
   }
 ];
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
