@@ -27,6 +27,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import LockOutlined from '@mui/icons-material/LockOutlined';
 import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
 import api from '../utils/axiosConfig';
+import { isValidIndianMobile } from '../utils/validatePhone';
 import type { ApiErrorResponse } from '../types/api';
 import { useTranslation } from 'react-i18next';
 import { useNotification } from '../contexts/NotificationContext';
@@ -70,6 +71,10 @@ const Login: React.FC = () => {
     return '+91' + digits;
   };
 
+  const digits = phoneNumber.replace(/^\+91/, '');
+  const isValidPhone = isValidIndianMobile(phoneNumber);
+  const showPhoneError = digits.length > 0 && !isValidIndianMobile(phoneNumber);
+
   const checkUserExists = async (phone: string) => {
     if (loadingPhoneCheck) return;
     setLoadingPhoneCheck(true);
@@ -86,14 +91,17 @@ const Login: React.FC = () => {
   };
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    const formatted = formatPhone(phoneNumber);
-    if (/^\+91\d{10}$/.test(formatted)) {
+    let timeout: NodeJS.Timeout | null = null;
+    const digits = phoneNumber.replace(/^\+91/, '');
+    if (digits.length === 10) {
+      const formatted = '+91' + digits;
       timeout = setTimeout(() => checkUserExists(formatted), 350);
     } else {
       setIsRegistered(null);
     }
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
   }, [phoneNumber, t]);
 
   // —————————————————————————————
@@ -253,190 +261,192 @@ const Login: React.FC = () => {
             fullWidth
             value={phoneNumber.replace(/^\+91/, '')}
             onChange={e => {
-              setPhoneNumber(formatPhone(e.target.value));
+              // Only allow up to 10 digits
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setPhoneNumber('+91' + digits);
             }}
-                  InputProps={{ 
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <PhoneOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                            +91
-                          </Typography>
-                        </Box>
-                      </InputAdornment>
-                    )
-                  }}
-            error={!!phoneNumber && !/^\+91\d{10}$/.test(formatPhone(phoneNumber))}
-            helperText={!!phoneNumber && !/^\+91\d{10}$/.test(formatPhone(phoneNumber)) ? t('login.invalidPhone') : ''}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      fontSize: '1rem',
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main'
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                        borderWidth: 2
-                      }
-                    }
-                  }}
+            InputProps={{ 
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <PhoneOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                      +91
+                    </Typography>
+                  </Box>
+                </InputAdornment>
+              )
+            }}
+            error={showPhoneError}
+            helperText={showPhoneError ? t('login.invalidPhone') : ''}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                fontSize: '1rem',
+                '&:hover fieldset': {
+                  borderColor: 'primary.main'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'primary.main',
+                  borderWidth: 2
+                }
+              }
+            }}
           />
               </Box>
 
           {/* Phone-check status */}
-          {phoneNumber && (
-                <Fade in={true} timeout={300}>
-                  <Box sx={{ mb: 3, width: '100%' }}>
-                    {loadingPhoneCheck ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
-                        <CircularProgress size={16} />
-                        <Typography variant="body2" color="text.secondary">
-                          {t('login.checkingPhone')}
-                        </Typography>
-                      </Box>
-                    ) : isRegistered === true ? (
-                      <Alert severity="success" sx={{ borderRadius: 2 }}>
-                        <Typography variant="body2" fontWeight={600}>
-                          ✓ {t('login.registeredUser')}
-                        </Typography>
-                      </Alert>
-                    ) : isRegistered === false ? (
-                      <Alert severity="info" sx={{ borderRadius: 2 }}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {t('login.newUser')}
-                        </Typography>
-                      </Alert>
-                    ) : null}
-            </Box>
-                </Fade>
+          {isValidPhone && (
+            <Fade in={true} timeout={300}>
+              <Box sx={{ mb: 3, width: '100%' }}>
+                {loadingPhoneCheck ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+                    <CircularProgress size={16} />
+                    <Typography variant="body2" color="text.secondary">
+                      {t('login.checkingPhone')}
+                    </Typography>
+                  </Box>
+                ) : isRegistered === true ? (
+                  <Alert severity="success" sx={{ borderRadius: 2 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      ✓ {t('login.registeredUser')}
+                    </Typography>
+                  </Alert>
+                ) : isRegistered === false ? (
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {t('login.newUser')}
+                    </Typography>
+                  </Alert>
+                ) : null}
+              </Box>
+            </Fade>
           )}
 
           {/* OTP Flow (Sign-up or Reset) */}
-          {isRegistered === false && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !resetMode && !loadingPhoneCheck && (
-                <Fade in={true} timeout={400}>
-                  <Box sx={{ width: '100%' }}>
-            <PhoneAuth
-              phoneNumber={phoneNumber}
-              onVerify={(_phone, idToken) => navigate('/register', {
-                state: { fromLogin: true, phone: phoneNumber, fromOTP: true, idToken }
-              })}
-            />
-                  </Box>
-                </Fade>
+          {isValidPhone && isRegistered === false && !resetMode && !loadingPhoneCheck && (
+            <Fade in={true} timeout={400}>
+              <Box sx={{ width: '100%' }}>
+                <PhoneAuth
+                  phoneNumber={phoneNumber}
+                  onVerify={(_phone, idToken) => navigate('/register', {
+                    state: { fromLogin: true, phone: phoneNumber, fromOTP: true, idToken }
+                  })}
+                />
+              </Box>
+            </Fade>
           )}
 
           {/* Password Login */}
-              {isRegistered === true && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !resetMode && !showResetForm && !loadingPhoneCheck && (
-                <Fade in={true} timeout={400}>
-            <Box component="form" onSubmit={formik.handleSubmit} width="100%">
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle2" fontWeight={600} mb={1} color="text.primary">
-                        {t('login.password')}
-                      </Typography>
-              <TextField
-                fullWidth
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                error={Boolean(formik.touched.password && (formik.errors.password || loginError))}
-                helperText={formik.touched.password && (formik.errors.password || loginError)}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                              <IconButton 
-                                onClick={() => setShowPassword(!showPassword)}
-                                sx={{ color: 'text.secondary' }}
-                              >
-                        {showPassword ? <VisibilityOff/> : <Visibility/>}
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                            fontSize: '1rem',
-                            '&:hover fieldset': {
-                              borderColor: 'primary.main'
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: 'primary.main',
-                              borderWidth: 2
-                            }
-                          }
-                        }}
-              />
-                    </Box>
-                    <Button 
-                      type="submit" 
-                      fullWidth 
-                      variant="contained" 
-                      disabled={formik.isSubmitting}
-                      size="large"
-                      sx={{
-                        py: 1.5,
-                        fontSize: '1rem',
-                        fontWeight: 600,
+          {isValidPhone && isRegistered === true && !resetMode && !showResetForm && !loadingPhoneCheck && (
+            <Fade in={true} timeout={400}>
+              <Box component="form" onSubmit={formik.handleSubmit} width="100%">
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" fontWeight={600} mb={1} color="text.primary">
+                    {t('login.password')}
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    error={Boolean(formik.touched.password && (formik.errors.password || loginError))}
+                    helperText={formik.touched.password && (formik.errors.password || loginError)}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton 
+                            onClick={() => setShowPassword(!showPassword)}
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            {showPassword ? <VisibilityOff/> : <Visibility/>}
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
-                        background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
-                        boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)',
-                          boxShadow: '0 6px 16px rgba(46, 125, 50, 0.4)'
+                        fontSize: '1rem',
+                        '&:hover fieldset': {
+                          borderColor: 'primary.main'
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'primary.main',
+                          borderWidth: 2
                         }
-                      }}
-                    >
-                      {formik.isSubmitting ? (
-                        <>
-                          <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
-                          {t('login.signingIn')}
-                        </>
-                      ) : (
-                        t('login.submit')
-                      )}
-              </Button>
-            </Box>
-                </Fade>
+                      }
+                    }}
+                  />
+                </Box>
+                <Button 
+                  type="submit" 
+                  fullWidth 
+                  variant="contained" 
+                  disabled={formik.isSubmitting}
+                  size="large"
+                  sx={{
+                    py: 1.5,
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
+                    boxShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)',
+                      boxShadow: '0 6px 16px rgba(46, 125, 50, 0.4)'
+                    }
+                  }}
+                >
+                  {formik.isSubmitting ? (
+                    <>
+                      <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+                      {t('login.signingIn')}
+                    </>
+                  ) : (
+                    t('login.submit')
+                  )}
+                </Button>
+              </Box>
+            </Fade>
           )}
 
           {/* Forgot-Password Link */}
-              {isRegistered === true && !resetMode && !showResetForm && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && !loadingPhoneCheck && (
-                <Fade in={true} timeout={500}>
-                  <Box sx={{ mt: 3, textAlign: 'center' }}>
-                    <Button
-                      variant="text"
-              onClick={() => setResetMode(true)}
-                      sx={{ 
-                        textTransform: 'none',
-                        color: 'primary.main',
-                        fontWeight: 600,
-                        '&:hover': {
-                          background: 'rgba(46, 125, 50, 0.08)'
-                        }
-                      }}
-            >
-              {t('login.forgotPassword')}
-                    </Button>
-                  </Box>
-                </Fade>
+          {isValidPhone && isRegistered === true && !resetMode && !showResetForm && !loadingPhoneCheck && (
+            <Fade in={true} timeout={500}>
+              <Box sx={{ mt: 3, textAlign: 'center' }}>
+                <Button
+                  variant="text"
+                  onClick={() => setResetMode(true)}
+                  sx={{ 
+                    textTransform: 'none',
+                    color: 'primary.main',
+                    fontWeight: 600,
+                    '&:hover': {
+                      background: 'rgba(46, 125, 50, 0.08)'
+                    }
+                  }}
+                >
+                  {t('login.forgotPassword')}
+                </Button>
+              </Box>
+            </Fade>
           )}
 
           {/* OTP Flow for Reset */}
-          {resetMode && /^\+91\d{10}$/.test(formatPhone(phoneNumber)) && (
-                <Fade in={true} timeout={400}>
-                  <Box sx={{ width: '100%' }}>
-            <PhoneAuth
-              phoneNumber={phoneNumber}
-              onVerify={(_phone, idToken) => {
-                setResetMode(false);
-                setShowResetForm(true);
-              }}
-            />
-                  </Box>
-                </Fade>
+          {resetMode && isValidPhone && (
+            <Fade in={true} timeout={400}>
+              <Box sx={{ width: '100%' }}>
+                <PhoneAuth
+                  phoneNumber={phoneNumber}
+                  onVerify={(_phone, idToken) => {
+                    setResetMode(false);
+                    setShowResetForm(true);
+                  }}
+                />
+              </Box>
+            </Fade>
           )}
 
           {/* Reset-Password Form */}

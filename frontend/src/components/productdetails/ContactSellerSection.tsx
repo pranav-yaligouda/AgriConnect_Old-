@@ -41,6 +41,11 @@ const ContactSellerSection = ({ product }: { product: any }) => {
 
   // Check for existing contact request
   React.useEffect(() => {
+    if (!isLoggedIn) {
+      setHasPendingRequest(false);
+      setRequestLoading(false);
+      return;
+    }
     let mounted = true;
     setRequestLoading(true);
     checkExistingContactRequest(product.farmer._id, product._id, Date.now())
@@ -48,7 +53,7 @@ const ContactSellerSection = ({ product }: { product: any }) => {
       .catch(() => { if (mounted) setHasPendingRequest(false); })
       .finally(() => { if (mounted) setRequestLoading(false); });
     return () => { mounted = false; };
-  }, [product.farmer._id, product._id]);
+  }, [isLoggedIn, product.farmer._id, product._id]);
 
   if (!isLoggedIn) {
     return (
