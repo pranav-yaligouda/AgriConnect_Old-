@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+import { auth } from '../../config/firebaseConfig';
 import { 
   Box, 
   Button, 
