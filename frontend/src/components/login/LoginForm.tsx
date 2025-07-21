@@ -52,6 +52,11 @@ const LoginForm: React.FC = () => {
     },
     onSuccess: (data) => {
       setIsRegistered(Boolean(data.exists));
+      // Reset forms when registration status changes
+      if (!data.exists) {
+        setResetMode(false);
+        setShowResetForm(false);
+      }
     },
     onError: (err: any) => {
       setIsRegistered(null);
@@ -74,6 +79,26 @@ const LoginForm: React.FC = () => {
       if (timeout) clearTimeout(timeout);
     };
   }, [phoneNumber, t]);
+
+  // Handle OTP verification for both registration and reset flows
+  const handleOTPVerification = (_phone: string, idToken: string) => {
+    if (isRegistered === false) {
+      // Always redirect to registration for new users
+      navigate('/register', {
+        state: { 
+          fromLogin: true, 
+          phone: phoneNumber, 
+          fromOTP: true, 
+          idToken,
+          fromForgotPassword: resetMode // Add this flag to indicate if user came from forgot password
+        }
+      });
+    } else if (isRegistered === true && resetMode) {
+      // Only show reset form for registered users in reset mode
+      setResetMode(false);
+      setShowResetForm(true);
+    }
+  };
 
   // React Query mutation for login
   const loginMutation = useMutation({
@@ -104,7 +129,7 @@ const LoginForm: React.FC = () => {
     validationSchema: Yup.object({
       password: Yup.string()
         .required(t('login.validation.passwordRequired'))
-        .min(6, t('login.validation.passwordMinLength'))
+        .min(8, t('login.validation.passwordMinLength'))
     }),
     onSubmit: async (values, helpers) => {
       helpers.setSubmitting(true);
@@ -227,14 +252,12 @@ const LoginForm: React.FC = () => {
       )}
 
       {/* OTP Flow (Sign-up or Reset) */}
-      {isValidPhone && isRegistered === false && !resetMode && !phoneCheckMutation.isPending && (
+      {isValidPhone && (isRegistered === false || resetMode) && !phoneCheckMutation.isPending && (
         <Fade in={true} timeout={400}>
           <Box sx={{ width: '100%' }}>
             <PhoneAuth
               phoneNumber={phoneNumber}
-              onVerify={(_phone, idToken) => navigate('/register', {
-                state: { fromLogin: true, phone: phoneNumber, fromOTP: true, idToken }
-              })}
+              onVerify={handleOTPVerification}
             />
           </Box>
         </Fade>
@@ -335,21 +358,6 @@ const LoginForm: React.FC = () => {
             >
               {t('login.forgotPassword')}
             </Button>
-          </Box>
-        </Fade>
-      )}
-
-      {/* OTP Flow for Reset */}
-      {resetMode && isValidPhone && (
-        <Fade in={true} timeout={400}>
-          <Box sx={{ width: '100%' }}>
-            <PhoneAuth
-              phoneNumber={phoneNumber}
-              onVerify={(_phone, idToken) => {
-                setResetMode(false);
-                setShowResetForm(true);
-              }}
-            />
           </Box>
         </Fade>
       )}

@@ -3,6 +3,7 @@ import { getAuth, updatePassword } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import { resetPassword } from '../services/apiService';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Box,
@@ -26,6 +27,8 @@ import LoginForm from '../components/login/LoginForm';
 const Login: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t } = useTranslation();
+
   return (
     <ErrorBoundary>
       <Container 
@@ -83,14 +86,14 @@ const Login: React.FC = () => {
                   color="primary"
                   gutterBottom
                 >
-                  Login
+                  {t('login.title')}
                 </Typography>
                 <Typography 
                   variant="body2" 
                   color="text.secondary"
                   sx={{ maxWidth: '350px', mx: 'auto', lineHeight: 1.6 }}
                 >
-                  Welcome to AgriConnect! We're excited to have you join our community. Let's get you started with a quick registration.
+                  {t('login.welcomeNew')}
                 </Typography>
               </Box>
               <LoginForm />
