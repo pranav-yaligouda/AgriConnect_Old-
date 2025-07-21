@@ -548,11 +548,15 @@ const verifyEmailOtp = async (req, res) => {
   if (!email || !otp) {
     return res.status(400).json({ message: 'Email and OTP required' });
   }
-  const record = emailOtps[email.toLowerCase()];
+  const forbiddenKeys = ['__proto__', 'constructor', 'prototype'];
+  const emailKey = email.toLowerCase();
+  if (forbiddenKeys.includes(emailKey)) {
+    return res.status(400).json({ message: 'Invalid email' });
+  }
+  const record = emailOtps[emailKey];
   if (!record || record.otp !== otp || Date.now() > record.expires) {
     return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
-  // Mark as verified for this session (could be persisted or handled in registration logic)
   record.verified = true;
   res.json({ verified: true });
 };
