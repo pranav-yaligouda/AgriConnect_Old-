@@ -27,6 +27,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import LockOutlined from '@mui/icons-material/LockOutlined';
 import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
 import api from '../utils/axiosConfig';
+import { useMutation } from '@tanstack/react-query';
 import { isValidIndianMobile } from '../utils/validatePhone';
 import type { ApiErrorResponse } from '../types/api';
 import { useTranslation } from 'react-i18next';
@@ -52,7 +53,6 @@ const Login: React.FC = () => {
   // —————————————————————————————
   const [phoneNumber, setPhoneNumber] = useState('');           // +91XXXXXXXXXX
   const [isRegistered, setIsRegistered] = useState<boolean | null>(null);
-  const [loadingPhoneCheck, setLoadingPhoneCheck] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // **Reset-Password specific**
@@ -75,27 +75,30 @@ const Login: React.FC = () => {
   const isValidPhone = isValidIndianMobile(phoneNumber);
   const showPhoneError = digits.length > 0 && !isValidIndianMobile(phoneNumber);
 
-  const checkUserExists = async (phone: string) => {
-    if (loadingPhoneCheck) return;
-    setLoadingPhoneCheck(true);
-    try {
+  // React Query mutation for phone check
+  const phoneCheckMutation = useMutation({
+    mutationFn: async (phone: string) => {
       const formattedPhone = formatPhone(phone);
       const res = await api.post<any>('/users/check-phone', { phone: formattedPhone });
-      setIsRegistered(Boolean(res.data.exists));
-    } catch (err: any) {
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setIsRegistered(Boolean(data.exists));
+    },
+    onError: (err: any) => {
       setIsRegistered(null);
       notify(err.message || t('login.error'), 'error');
-    } finally {
-      setLoadingPhoneCheck(false);
-    }
-  };
+    },
+  });
 
   useEffect(() => {
     let timeout: NodeJS.Timeout | null = null;
-    const digits = phoneNumber.replace(/^\+91/, '');
-    if (digits.length === 10) {
-      const formatted = '+91' + digits;
-      timeout = setTimeout(() => checkUserExists(formatted), 350);
+    if (isValidIndianMobile(phoneNumber)) {
+      timeout = setTimeout(() => {
+        if (!phoneCheckMutation.isLoading) {
+          phoneCheckMutation.mutate(phoneNumber);
+        }
+      }, 350);
     } else {
       setIsRegistered(null);
     }
@@ -107,6 +110,30 @@ const Login: React.FC = () => {
   // —————————————————————————————
   // Formik for password login
   // —————————————————————————————
+  // React Query mutation for login
+  const loginMutation = useMutation({
+    mutationFn: async ({ phone, password }: { phone: string; password: string }) => {
+      const res = await api.post<any>('/users/login', { phone, password });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (data.token) {
+        setToken(data.token);
+        notify(t('login.success'), 'success');
+        setTimeout(() => navigate('/profile', { replace: true }), 300);
+      } else {
+        setLoginError(t('login.invalidCredentials'));
+      }
+    },
+    onError: (err: any, _variables, context) => {
+      if (err.response?.status === 401) {
+        setLoginError(t('login.invalidCredentials'));
+      } else {
+        setLoginError(err.message || t('login.error'));
+      }
+    },
+  });
+
   const formik = useFormik<LoginFormValues>({
     initialValues: { password: '' },
     validationSchema: Yup.object({
@@ -117,30 +144,8 @@ const Login: React.FC = () => {
     onSubmit: async (values, helpers) => {
       helpers.setSubmitting(true);
       setLoginError(null);
-      try {
-        const res = await api.post<any>('/users/login', {
-          phone: phoneNumber,
-          password: values.password
-        });
-        if (res.data.token) {
-          setToken(res.data.token);
-          notify(t('login.success'), 'success');
-          setTimeout(() => navigate('/profile', { replace: true }), 300);
-        } else {
-          setLoginError(t('login.invalidCredentials'));
-          helpers.setFieldError('password', t('login.invalidCredentials'));
-        }
-      } catch (err: any) {
-        helpers.setSubmitting(false);
-        if (err.response?.status === 401) {
-          setLoginError(t('login.invalidCredentials'));
-          helpers.setFieldError('password', t('login.invalidCredentials'));
-        } else {
-          setLoginError(err.message || t('login.error'));
-        }
-      } finally {
-        helpers.setSubmitting(false);
-      }
+      loginMutation.mutate({ phone: phoneNumber, password: values.password });
+      helpers.setSubmitting(false);
     }
   });
 
@@ -299,7 +304,7 @@ const Login: React.FC = () => {
           {isValidPhone && (
             <Fade in={true} timeout={300}>
               <Box sx={{ mb: 3, width: '100%' }}>
-                {loadingPhoneCheck ? (
+                {phoneCheckMutation.isLoading ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
                     <CircularProgress size={16} />
                     <Typography variant="body2" color="text.secondary">
@@ -324,7 +329,7 @@ const Login: React.FC = () => {
           )}
 
           {/* OTP Flow (Sign-up or Reset) */}
-          {isValidPhone && isRegistered === false && !resetMode && !loadingPhoneCheck && (
+          {isValidPhone && isRegistered === false && !resetMode && !phoneCheckMutation.isLoading && (
             <Fade in={true} timeout={400}>
               <Box sx={{ width: '100%' }}>
                 <PhoneAuth
@@ -338,7 +343,7 @@ const Login: React.FC = () => {
           )}
 
           {/* Password Login */}
-          {isValidPhone && isRegistered === true && !resetMode && !showResetForm && !loadingPhoneCheck && (
+          {isValidPhone && isRegistered === true && !resetMode && !showResetForm && !phoneCheckMutation.isLoading && (
             <Fade in={true} timeout={400}>
               <Box component="form" onSubmit={formik.handleSubmit} width="100%">
                 <Box sx={{ mb: 3 }}>
@@ -413,7 +418,7 @@ const Login: React.FC = () => {
           )}
 
           {/* Forgot-Password Link */}
-          {isValidPhone && isRegistered === true && !resetMode && !showResetForm && !loadingPhoneCheck && (
+          {isValidPhone && isRegistered === true && !resetMode && !showResetForm && !phoneCheckMutation.isLoading && (
             <Fade in={true} timeout={500}>
               <Box sx={{ mt: 3, textAlign: 'center' }}>
                 <Button
