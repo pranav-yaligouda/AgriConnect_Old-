@@ -25,24 +25,39 @@ const createProduct = async (req, res) => {
         details: error.details
       });
     }
-    // --- Robust image validation ---
+
+    // --- Robust image validation with type checking ---
     const files = req.files;
-    if (!files || files.length === 0) {
+    
+    // Type confusion protection
+    if (!files || !Array.isArray(files)) {
+      return res.status(400).json({ 
+        message: 'Invalid file upload format. Please provide image files.',
+        details: 'Files must be provided as an array'
+      });
+    }
+
+    // Length validation
+    if (files.length === 0) {
       return res.status(400).json({ message: 'At least one image file is required.' });
     }
+    
     if (files.length > 3) {
       return res.status(400).json({ message: 'A maximum of 3 images are allowed.' });
     }
+
     // Validate and upload each image
     const imageUrls = [];
     for (const file of files) {
-      if (!file.buffer) {
-        return res.status(400).json({ message: 'File buffer missing.' });
+      if (!file || !file.buffer) {
+        return res.status(400).json({ message: 'Invalid file format: File buffer missing.' });
       }
+
       const fileType = await fileTypeFromBuffer(file.buffer);
       if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
         return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
       }
+
       // Upload to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -56,6 +71,7 @@ const createProduct = async (req, res) => {
       });
       imageUrls.push(uploadResult.secure_url);
     }
+
     // --- Create product only if all images are valid and uploaded ---
     const product = new Product({
       ...req.body,
@@ -313,22 +329,39 @@ const addReview = async (req, res) => {
 const uploadProductImages = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
-    if (!req.files || req.files.length === 0) {
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Type confusion protection
+    const files = req.files;
+    if (!files || !Array.isArray(files)) {
+      return res.status(400).json({ 
+        message: 'Invalid file upload format. Please provide image files.',
+        details: 'Files must be provided as an array'
+      });
+    }
+
+    // Length validation
+    if (files.length === 0) {
       return res.status(400).json({ message: 'No images uploaded' });
     }
-    if (req.files.length > 3) {
+
+    if (files.length > 3) {
       return res.status(400).json({ message: 'A maximum of 3 images are allowed.' });
     }
+
     const imageUrls = [];
-    for (const file of req.files) {
-      if (!file.buffer) {
-        return res.status(400).json({ message: 'File buffer missing.' });
+    for (const file of files) {
+      if (!file || !file.buffer) {
+        return res.status(400).json({ message: 'Invalid file format: File buffer missing.' });
       }
+
       const fileType = await fileTypeFromBuffer(file.buffer);
       if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
         return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
       }
+
       // Upload to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -342,11 +375,16 @@ const uploadProductImages = async (req, res) => {
       });
       imageUrls.push(uploadResult.secure_url);
     }
+
     product.images.push(...imageUrls);
     await product.save();
     res.json({ urls: imageUrls });
   } catch (error) {
-    res.status(500).json({ message: 'Error uploading product images', error: error.message });
+    console.error('Error uploading product images:', error);
+    res.status(500).json({ 
+      message: 'Error uploading product images', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 };
 
