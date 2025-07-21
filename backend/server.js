@@ -119,12 +119,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Serve favicon.ico at the root
-app.use('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'favicon.ico'));
-});
-
-
 // Body parsers (increase payload limit for large uploads)
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
