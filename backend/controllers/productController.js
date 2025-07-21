@@ -1,67 +1,78 @@
-const Product = require('../models/Product');
-const { validateProduct, productSchema } = require('../utils/productValidation');
-const productNames = require('../config/productNames');
-const { fileTypeFromBuffer } = require('file-type');
-const cloudinary = require('../utils/cloudinary');
+const Product = require("../models/Product");
+const {
+  validateProduct,
+  productSchema,
+} = require("../utils/productValidation");
+const productNames = require("../config/productNames");
+const { fileTypeFromBuffer } = require("file-type");
+const cloudinary = require("../utils/cloudinary");
 
 // Create a new product
 const createProduct = async (req, res) => {
   try {
-    console.log('req.body:', req.body);
-    console.log('req.files:', req.files);
+    console.log("req.body:", req.body);
+    console.log("req.files:", req.files);
     // Parse location if sent as JSON string
-    if (typeof req.body.location === 'string') {
+    if (typeof req.body.location === "string") {
       try {
         req.body.location = JSON.parse(req.body.location);
       } catch (e) {
-        return res.status(400).json({ message: 'Invalid location format' });
+        return res.status(400).json({ message: "Invalid location format" });
       }
     }
     // Validate product data (except images)
     const { error } = validateProduct(req.body);
     if (error) {
       return res.status(400).json({
-        message: 'Invalid product data',
-        details: error.details
+        message: "Invalid product data",
+        details: error.details,
       });
     }
 
     // --- Robust image validation with type checking ---
     const files = req.files;
-    
+
     // Type confusion protection
     if (!files || !Array.isArray(files)) {
-      return res.status(400).json({ 
-        message: 'Invalid file upload format. Please provide image files.',
-        details: 'Files must be provided as an array'
+      return res.status(400).json({
+        message: "Invalid file upload format. Please provide image files.",
+        details: "Files must be provided as an array",
       });
     }
 
     // Length validation
     if (files.length === 0) {
-      return res.status(400).json({ message: 'At least one image file is required.' });
+      return res
+        .status(400)
+        .json({ message: "At least one image file is required." });
     }
-    
+
     if (files.length > 3) {
-      return res.status(400).json({ message: 'A maximum of 3 images are allowed.' });
+      return res
+        .status(400)
+        .json({ message: "A maximum of 3 images are allowed." });
     }
 
     // Validate and upload each image
     const imageUrls = [];
     for (const file of files) {
       if (!file || !file.buffer) {
-        return res.status(400).json({ message: 'Invalid file format: File buffer missing.' });
+        return res
+          .status(400)
+          .json({ message: "Invalid file format: File buffer missing." });
       }
 
       const fileType = await fileTypeFromBuffer(file.buffer);
-      if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
-        return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
+      if (!fileType || !["image/jpeg", "image/png"].includes(fileType.mime)) {
+        return res.status(400).json({
+          message: "Invalid image type. Only JPEG and PNG are allowed.",
+        });
       }
 
       // Upload to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { resource_type: 'image', folder: 'agriconnect/product_images' },
+          { resource_type: "image", folder: "agriconnect/product_images" },
           (error, result) => {
             if (error) return reject(error);
             resolve(result);
@@ -82,111 +93,155 @@ const createProduct = async (req, res) => {
     await product.save();
     res.status(201).json(product);
   } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(400).json({ message: error.message || 'Error creating product' });
+    console.error("Error creating product:", error);
+    res
+      .status(400)
+      .json({ message: error.message || "Error creating product" });
   }
 };
 
 // Get all products with optional filters
 const getProducts = async (req, res) => {
   try {
-    console.log('Received query params:', req.query);
-    const { 
-      category, 
-      minPrice, 
-      maxPrice, 
-      district, 
-      state, 
-      search, 
+    const {
+      category,
+      minPrice,
+      maxPrice,
+      district,
+      state,
+      search,
       isOrganic,
       sort,
       page = 1,
       limit = 20,
-      name
+      name,
     } = req.query;
 
     const query = {};
 
     // Category filter (supports multiple categories)
-    if (category) {
-      // Defensive: handle array or comma-separated string, and ignore 'all' and empty
-      let catArr = Array.isArray(category) ? category : category.split(',');
-      catArr = catArr.filter(c => c && c !== 'all');
+    if (typeof category === "string" && category.length < 100) {
+      let catArr = category.split(",").filter((c) => c && c !== "all");
       if (catArr.length > 0) {
         query.category = { $in: catArr };
       }
+    } else if (Array.isArray(category)) {
+      let catArr = category.filter(
+        (c) => typeof c === "string" && c && c !== "all"
+      );
+      if (catArr.length > 0) {
+        query.category = { $in: catArr };
+      }
+    } else if (typeof category !== "undefined" && category !== null) {
+      return res.status(400).json({ message: "Invalid category parameter" });
     }
 
     // Filter by product name key
-    if (name) {
+    if (typeof name === "string" && name.length > 0 && name.length < 100) {
       query.name = name;
+    } else if (typeof name !== "undefined" && name !== null) {
+      return res.status(400).json({ message: "Invalid name parameter" });
     }
 
     // Price range filter
-    if (minPrice || maxPrice) {
+    if (
+      (typeof minPrice !== "undefined" && minPrice !== null) ||
+      (typeof maxPrice !== "undefined" && maxPrice !== null)
+    ) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (
+        typeof minPrice !== "undefined" &&
+        minPrice !== null &&
+        !isNaN(Number(minPrice))
+      )
+        query.price.$gte = Number(minPrice);
+      if (
+        typeof maxPrice !== "undefined" &&
+        maxPrice !== null &&
+        !isNaN(Number(maxPrice))
+      )
+        query.price.$lte = Number(maxPrice);
     }
 
     // Text search filter
-    if (search) {
+    // For each filter, only add to query if non-empty string
+    if (
+      typeof search === "string" &&
+      search.length > 0 &&
+      search.length < 100
+    ) {
       query.$text = { $search: search };
     }
+    // Do NOT return 400 for empty string or undefined
 
     // Location filters
-    if (district) query["location.district"] = district;
-    if (state) query["location.state"] = state;
-
-    // Modify the organic filter handling:
-    if (typeof isOrganic !== 'undefined') {
-     query.isOrganic = isOrganic === 'true';
+    if (
+      typeof district === "string" &&
+      district.length > 0 &&
+      district.length < 100
+    ) {
+      query["location.district"] = district;
     }
 
-    // Sorting logic
-    const sortOptions = {};
-    switch(sort) {
-      case 'price-asc':
-        sortOptions.price = 1;
-        break;
-      case 'price-desc':
-        sortOptions.price = -1;
-        break;
-      case 'newest':
-        sortOptions.createdAt = -1;
-        break;
-      case 'featured':
-        sortOptions.rating = -1;
-        sortOptions.createdAt = -1;
-        break;
-      default:
-        sortOptions.createdAt = -1;
+    if (typeof state === "string" && state.length > 0 && state.length < 100)
+      query["location.state"] = state;
+    else if (typeof state !== "undefined" && state !== null)
+      return res.status(400).json({ message: "Invalid state parameter" });
+
+    // Organic filter
+    if (typeof isOrganic !== "undefined") {
+      if (isOrganic === "true") query.isOrganic = true;
+      else if (isOrganic === "false") query.isOrganic = false;
+      else
+        return res.status(400).json({ message: "Invalid isOrganic parameter" });
+    }
+
+    // Sorting logic (allow-list)
+    const allowedSorts = ["price-asc", "price-desc", "newest", "featured"];
+    let sortOptions = { createdAt: -1 };
+    if (typeof sort === "string" && allowedSorts.includes(sort)) {
+      switch (sort) {
+        case "price-asc":
+          sortOptions = { price: 1 };
+          break;
+        case "price-desc":
+          sortOptions = { price: -1 };
+          break;
+        case "newest":
+          sortOptions = { createdAt: -1 };
+          break;
+        case "featured":
+          sortOptions = { rating: -1, createdAt: -1 };
+          break;
+      }
+    } else if (typeof sort !== "undefined" && sort !== null) {
+      return res.status(400).json({ message: "Invalid sort parameter" });
     }
 
     // Pagination
     const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.max(1, Math.min(100, parseInt(limit))); // max 100 per page
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit)));
     const skip = (pageNum - 1) * limitNum;
 
     // Fetch products and total count in parallel
     const [products, total] = await Promise.all([
       Product.find(query)
-        .populate('farmer', 'name email phone location address profileImageUrl')
+        .populate("farmer", "name email phone location address profileImageUrl")
         .sort(sortOptions)
         .skip(skip)
         .limit(limitNum),
-      Product.countDocuments(query)
+      Product.countDocuments(query),
     ]);
 
     res.json({
       products,
       total,
       page: pageNum,
-      pageCount: Math.ceil(total / limitNum)
+      pageCount: Math.ceil(total / limitNum),
     });
   } catch (error) {
-    console.error('Full error:', error);
-    res.status(500).json({ message: 'Error fetching products' });
+    console.error("Full error:", error);
+    res.status(500).json({ message: "Error fetching products" });
   }
 };
 
@@ -194,31 +249,33 @@ const getProducts = async (req, res) => {
 const getProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    if (typeof id !== 'string') {
-      return res.status(400).json({ message: 'Invalid product id' });
+    if (typeof id !== "string") {
+      return res.status(400).json({ message: "Invalid product id" });
     }
     const product = await Product.findOne({ _id: { $eq: id } })
-      .populate('farmer', 'name email phone location address profileImageUrl')
-      .populate('reviews.user', 'name');
-    
+      .populate("farmer", "name email phone location address profileImageUrl")
+      .populate("reviews.user", "name");
+
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
-    
+
     res.json(product);
   } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(500).json({ message: 'Error fetching product', error: error.message });
+    console.error("Error fetching product:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching product", error: error.message });
   }
 };
 
 // Add this to productController.js
 const getCategories = async (req, res) => {
   try {
-    const categories = await Product.distinct('category');
-    res.json(['all', ...categories]);
+    const categories = await Product.distinct("category");
+    res.json(["all", ...categories]);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching categories' });
+    res.status(500).json({ message: "Error fetching categories" });
   }
 };
 
@@ -227,18 +284,18 @@ const getMyProducts = async (req, res) => {
   try {
     console.log(`Fetching products for farmer: ${req.user._id}`);
     const products = await Product.find({ farmer: req.user._id })
-    .populate('farmer', 'name email phone location address profileImage') // Explicitly select fields
-    .sort({ createdAt: -1 })
-    .lean();
+      .populate("farmer", "name email phone location address profileImage") // Explicitly select fields
+      .sort({ createdAt: -1 })
+      .lean();
 
-    console.log('Query results:', products);
+    console.log("Query results:", products);
     console.log(`Found ${products.length} products`);
     res.json(products);
   } catch (error) {
-    console.error('Error in getMyProducts:', error);
-    res.status(500).json({ 
-      message: 'Error fetching products',
-      error: error.message 
+    console.error("Error in getMyProducts:", error);
+    res.status(500).json({
+      message: "Error fetching products",
+      error: error.message,
     });
   }
 };
@@ -247,30 +304,37 @@ const getMyProducts = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    if (typeof id !== 'string') {
-      return res.status(400).json({ message: 'Invalid product id' });
+    if (typeof id !== "string") {
+      return res.status(400).json({ message: "Invalid product id" });
     }
     const product = await Product.findOne({
       _id: { $eq: id },
-      farmer: req.user._id
+      farmer: req.user._id,
     });
     if (!product) {
-      return res.status(404).json({ message: 'Product not found or unauthorized' });
+      return res
+        .status(404)
+        .json({ message: "Product not found or unauthorized" });
     }
     // FIX: Correct validation call
     const { error } = validateProduct(req.body);
     if (error) {
-      return res.status(400).json({ message: 'Invalid product data', details: error.details });
+      return res
+        .status(400)
+        .json({ message: "Invalid product data", details: error.details });
     }
     Object.assign(product, req.body);
-    if (typeof req.body.minimumOrderQuantity !== 'undefined') {
+    if (typeof req.body.minimumOrderQuantity !== "undefined") {
       product.minimumOrderQuantity = req.body.minimumOrderQuantity;
     }
     await product.save();
     res.json(product);
   } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(400).json({ message: 'Error updating product', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+    console.error("Error updating product:", error);
+    res.status(400).json({
+      message: "Error updating product",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -278,18 +342,23 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    if (typeof id !== 'string') {
-      return res.status(400).json({ message: 'Invalid product id' });
+    if (typeof id !== "string") {
+      return res.status(400).json({ message: "Invalid product id" });
     }
     const product = await Product.findOneAndDelete({
       _id: { $eq: id },
-      farmer: req.user._id
+      farmer: req.user._id,
     });
-    if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
-    res.json({ message: 'Product deleted' });
+    if (!product)
+      return res
+        .status(404)
+        .json({ message: "Product not found or unauthorized" });
+    res.json({ message: "Product deleted" });
   } catch (error) {
-    console.error('Error deleting product:', error);
-    res.status(500).json({ message: 'Error deleting product', error: error.message });
+    console.error("Error deleting product:", error);
+    res
+      .status(500)
+      .json({ message: "Error deleting product", error: error.message });
   }
 };
 
@@ -299,28 +368,35 @@ const addReview = async (req, res) => {
     const { rating, comment } = req.body;
     const product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
     // Only allow users who are not the owner to review
     if (product.farmer.toString() === req.user._id.toString()) {
-      return res.status(403).json({ message: 'You cannot review your own product' });
+      return res
+        .status(403)
+        .json({ message: "You cannot review your own product" });
     }
     // Validate rating
-    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    if (typeof rating !== "number" || rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5" });
     }
     const review = {
       user: req.user._id,
       rating,
-      comment
+      comment,
     };
     product.reviews.push(review);
     product.rating = calculateAverageRating(product.reviews);
     await product.save();
     res.status(201).json(product);
   } catch (error) {
-    console.error('Error adding review:', error);
-    res.status(400).json({ message: 'Error adding review', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+    console.error("Error adding review:", error);
+    res.status(400).json({
+      message: "Error adding review",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -330,42 +406,48 @@ const uploadProductImages = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ message: "Product not found" });
     }
 
     // Type confusion protection
     const files = req.files;
     if (!files || !Array.isArray(files)) {
-      return res.status(400).json({ 
-        message: 'Invalid file upload format. Please provide image files.',
-        details: 'Files must be provided as an array'
+      return res.status(400).json({
+        message: "Invalid file upload format. Please provide image files.",
+        details: "Files must be provided as an array",
       });
     }
 
     // Length validation
     if (files.length === 0) {
-      return res.status(400).json({ message: 'No images uploaded' });
+      return res.status(400).json({ message: "No images uploaded" });
     }
 
     if (files.length > 3) {
-      return res.status(400).json({ message: 'A maximum of 3 images are allowed.' });
+      return res
+        .status(400)
+        .json({ message: "A maximum of 3 images are allowed." });
     }
 
     const imageUrls = [];
     for (const file of files) {
       if (!file || !file.buffer) {
-        return res.status(400).json({ message: 'Invalid file format: File buffer missing.' });
+        return res
+          .status(400)
+          .json({ message: "Invalid file format: File buffer missing." });
       }
 
       const fileType = await fileTypeFromBuffer(file.buffer);
-      if (!fileType || !['image/jpeg', 'image/png'].includes(fileType.mime)) {
-        return res.status(400).json({ message: 'Invalid image type. Only JPEG and PNG are allowed.' });
+      if (!fileType || !["image/jpeg", "image/png"].includes(fileType.mime)) {
+        return res.status(400).json({
+          message: "Invalid image type. Only JPEG and PNG are allowed.",
+        });
       }
 
       // Upload to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { resource_type: 'image', folder: 'agriconnect/product_images' },
+          { resource_type: "image", folder: "agriconnect/product_images" },
           (error, result) => {
             if (error) return reject(error);
             resolve(result);
@@ -380,10 +462,10 @@ const uploadProductImages = async (req, res) => {
     await product.save();
     res.json({ urls: imageUrls });
   } catch (error) {
-    console.error('Error uploading product images:', error);
-    res.status(500).json({ 
-      message: 'Error uploading product images', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    console.error("Error uploading product images:", error);
+    res.status(500).json({
+      message: "Error uploading product images",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -399,11 +481,10 @@ function calculateAverageRating(reviews) {
 const getProductNames = (req, res) => {
   const { category } = req.query;
   if (!category || !productNames[category]) {
-    return res.status(400).json({ message: 'Invalid category' });
+    return res.status(400).json({ message: "Invalid category" });
   }
   res.json(productNames[category]);
 };
-
 
 module.exports = {
   createProduct,
@@ -416,4 +497,4 @@ module.exports = {
   getCategories,
   uploadProductImages, // Export the new handler
   getProductNames,
-}; 
+};
