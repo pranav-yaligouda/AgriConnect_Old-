@@ -401,13 +401,19 @@ exports.getAllContactRequests = [require('../middleware/auth').authorize('admin'
     const { page = 1, limit = 20, status, search } = req.query;
     const query = {};
     if (status && VALID_STATUSES.includes(status)) query.status = status;
-    if (search && typeof search === 'string' && search.length < 100) {
+
+    // Strict type and length check for search
+    if (typeof search === 'string' && search.length > 0 && search.length < 100) {
       const safeSearch = escapeRegex(search);
       query.$or = [
         { requesterName: { $regex: safeSearch, $options: 'i' } },
         { farmerName: { $regex: safeSearch, $options: 'i' } }
       ];
+    } else if (typeof search !== 'undefined' && search !== null) {
+      // If search is provided but not a string, reject the request
+      return res.status(400).json({ message: 'Invalid search parameter' });
     }
+
     const requests = await ContactRequest.find(query)
       .populate('productId')
       .populate('farmerId')
