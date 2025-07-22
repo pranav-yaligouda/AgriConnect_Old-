@@ -70,8 +70,8 @@ const AdminLogin: React.FC = () => {
             margin="normal"
             autoComplete="current-password"
             required
-            error={touched.password && password.length < 6}
-            helperText={touched.password && password.length < 6 ? 'Password must be at least 6 characters' : ''}
+            error={touched.password && password.length < 8}
+            helperText={touched.password && password.length < 8 ? 'Password must be at least 8 characters' : ''}
             inputProps={{ maxLength: 100 }}
             InputProps={{
               endAdornment: (

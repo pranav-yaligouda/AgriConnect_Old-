@@ -5,6 +5,7 @@ const { auth, authorize } = require('../middleware/auth');
 const { getCategories } = require('../controllers/productController');
 const multer = require('multer');
 const { productImageStorage } = require('../utils/cloudinary');
+const { validateQuery, productSchemas } = require('../utils/validation');
 // Use memory storage for product creation and image upload
 const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
 const upload = multer({ storage: productImageStorage, limits: { fileSize: 5 * 1024 * 1024 } }); // for other routes if needed
@@ -20,7 +21,7 @@ const {
 
 
 // Public routes
-router.get('/', getProducts);
+router.get('/', validateQuery(productSchemas.query), getProducts);
 router.get('/categories', getCategories);
 router.get('/names', productController.getProductNames);
 router.get('/:id', getProduct);

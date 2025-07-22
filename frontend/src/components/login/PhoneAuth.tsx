@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+import { auth } from '../../config/firebaseConfig';
 import { 
   Box, 
   Button, 
@@ -251,7 +251,7 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ phoneNumber, onVerify }) => {
               {otp.map((digit, index) => (
                 <TextField
                   key={index}
-                  ref={(el) => inputRefs.current[index] = el}
+                  inputRef={el => inputRefs.current[index] = el}
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onFocus={() => handleInputFocus(index)}

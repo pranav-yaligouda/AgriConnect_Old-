@@ -51,6 +51,9 @@ const requestMonitor = (req, res, next) => {
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy for rate limiting behind load balancers
+app.set('trust proxy', 1);
+
 // Access environment variables using config
 const port = config.get('PORT');
 const jwtSecret = config.get('JWT_SECRET');
@@ -115,12 +118,6 @@ const corsOptions = {
   credentials: true
 };
 app.use(cors(corsOptions));
-
-// Serve favicon.ico at the root
-app.use('/favicon.ico', (req, res) => {
-  res.sendFile(path.join(__dirname, 'favicon.ico'));
-});
-
 
 // Body parsers (increase payload limit for large uploads)
 app.use(express.json({ limit: '20mb' }));

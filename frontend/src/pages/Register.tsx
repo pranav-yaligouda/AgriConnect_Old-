@@ -158,7 +158,7 @@ const Register = () => {
         .matches(/^\+?\d{10,15}$/, t('register.validation.phoneInvalid'))
         .required(t('register.validation.phoneRequired')),
       password: Yup.string()
-        .min(7, t('register.validation.passwordMinLength', 'Password must be at least 7 characters'))
+        .min(8, t('register.validation.passwordPattern'))
         .matches(
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{7,}$/,
           t('register.validation.passwordPattern', 'Password must contain at least one uppercase letter, one lowercase letter, and one digit. Symbols are allowed.')

@@ -119,7 +119,7 @@ const Home = () => {
               </Button>
               <Button
                 component={RouterLink}
-                to={isLoggedIn ? "dashboard" : "register"}
+                to={isLoggedIn ? "dashboard" : "login"}
                 variant="outlined"
                 size="large"
                 sx={{
